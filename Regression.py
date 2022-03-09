@@ -7,8 +7,6 @@ Created on Wed Feb 23 09:56:01 2022
 #import scipy.integrate as integrate
 #from scipy.integrate import odeint
 from scipy.optimize import minimize
-from scipy.optimize import least_squares
-from scipy.optimize import curve_fit
 from statistiques import *
 #import scipy.linalg as la
 import numpy as np
@@ -25,7 +23,7 @@ def readData(inputFile):
     return etaE, dgammaE
 
 #Theoric model
-def estimate(param,law,dgamma):
+def model(param,law,dgamma):
     eta=[]
     #Power Law model
     if law==models[0]:
@@ -37,15 +35,12 @@ def estimate(param,law,dgamma):
         eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
     return eta
 
-def CarYas(dgamma,etainf,etazero,lambd,a,n):
-    eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
-    return eta
 
 #Least squares definition
 def objective(param):
-#    return np.sum(((estimate(param,law,dgammaE)-etaE)/etaE)**2)
-#    return np.log(estimate(param,law,dgammaE))-np.log(etaE)
-    return np.sum(((estimate(param,law,dgammaE)-etaE)/etaE)**2)
+    return np.sum(((model(param,law,dgammaE)-etaE)/etaE)**2)
+
+
 #Fetching experimental data
 #nameFile= #DEMANDER NOM DU FICHIER UTILISATEUR?
 models=[
@@ -54,19 +49,13 @@ models=[
         "Cross"]
 law=models[1]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
 [etaE,dgammaE]=readData("test1.txt")
-#if dgammaE[1]<dgammaE[0]:
- #   dgammaE.reverse()
-    
+
 # initial guesses
 if law==models[0]:
-#    param0=[98.025251,-0.03266]
-    param0=[1.0,0.05]
+    param0=[98.025251,-0.03266]
 if law==models[1]:
 #    param0=[0.0005,385.4000,0.0004209,1.0730147,-250.4070]
-    param0=[min(etaE),max(etaE),0.00050,1.07000,-250.500000]
-    #if 
-#eta_inf zero vs existe
-
+    param0=[etaE[len(etaE)-1],etaE[0],0.0005000,1.0600000,-251.000000]
 
 # optimize
 # bounds on variables
@@ -74,17 +63,19 @@ bnds0 = (0.0, 1.0e3)
 no_bnds = (-1.0e10, 1.0e10)
 if law==models[0]:
     bnds = (no_bnds, no_bnds)
- #   bnds = (bnds0, bnds0)
 if law==models[1]:
     bnds = (bnds0, bnds0, bnds0, bnds0, no_bnds)
-#solution = minimize(objective,param0,method='SLSQP',bounds=bnds)
-solution = least_squares(objective,param0)
-#solution, cov=curve_fit(CarYas,dgammaE,etaE,param0,bounds=[0,1.0e10])
+solution = minimize(objective,param0,method='SLSQP',bounds=bnds)
+#print(solution)
 param = solution.x
+#print(param)
+#x=np.linspace(dgammaE[len(dgammaE)-1],dgammaE[0],300)
+#print(dgammaE)
+#print(x)
+dgamma=np.linspace(dgammaE[0],dgammaE[len(dgammaE)-1],100)
+eta = model(param,law,dgamma)
+#print(eta)
 
-dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
-eta = estimate(param,law,dgamma)
-print(eta)
 #############################################################################
 ###PRINTING RESULTS###
 # show final objective
@@ -103,11 +94,7 @@ if law==models[1]:
     print('n = ' + str(param[4]))
 
 #Statistics report    
-r2score(dgammaE,etaE,estimate(param,law,dgammaE))   
-
-ymin=min(etaE)
-if min(eta)<ymin:
-    ymin=min(eta)
+r2score(dgammaE,etaE,model(param,law,dgammaE))   
 
 # plot solution
 plt.figure(1)
@@ -117,7 +104,6 @@ plt.yscale("log")
 plt.xscale("log")
 plt.xlabel('dgamma')
 plt.ylabel('eta')
-plt.ylim((ymin,max(etaE)))
 plt.legend(['Measured','Predicted'],loc='best')
 plt.savefig('results.png')
 plt.show()
