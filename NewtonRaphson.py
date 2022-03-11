@@ -7,9 +7,18 @@ Created on Tue Mar  8 13:14:50 2022
 import scipy.linalg as la
 import numpy as np
 import matplotlib.pyplot as plt
-from statistiques import *
 import math as mt
 import sys
+
+
+def r2score(xexp,yexp,yreg):
+    yavg=np.sum(yexp)/len(yexp)
+    avg=yexp-yavg
+    reg=yexp-yreg
+    coeff=(np.sum(np.power(avg,2))-np.sum(np.power(reg,2)))/np.sum(np.power(avg,2))
+    print('\nR2 = ')
+    print(coeff)
+    return coeff
 
 #Importing data function
 def readData(inputFile):

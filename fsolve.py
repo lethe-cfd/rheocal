@@ -6,11 +6,20 @@ This method uses fsolve
 @author: Bérénice
 """
 from scipy.optimize import fsolve
-from statistiques import *
 import numpy as np
 import matplotlib.pyplot as plt
 import math as mt
 import sys
+
+
+def r2score(xexp,yexp,yreg):
+    yavg=np.sum(yexp)/len(yexp)
+    avg=yexp-yavg
+    reg=yexp-yreg
+    coeff=(np.sum(np.power(avg,2))-np.sum(np.power(reg,2)))/np.sum(np.power(avg,2))
+    print('\nR2 = ')
+    print(coeff)
+    return coeff
 
 #Importing data function
 def readData(inputFile):
