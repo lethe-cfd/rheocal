@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar  8 13:14:50 2022
+Created on Wed Feb 23 09:56:01 2022
+This method uses fsolve
 
 @author: Bérénice
 """
-import scipy.linalg as la
+from scipy.optimize import fsolve
+from statistiques import *
 import numpy as np
 import matplotlib.pyplot as plt
-from statistiques import *
 import math as mt
 import sys
 
@@ -31,21 +32,16 @@ def estimate(param,law,dgamma):
         eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
     return eta
 
-#Matrice R(x)
-def R(yexp,param,law,dgammaE):
-    eta=estimate(param,law,dgammaE)
-    R=np.zeros(len(param))
-    if law=="Power Law":
-        R[0]=0
-        R[1]=0
-    if law=="CarreauYasuda":
-        etainf,eta0,lamb,a,n=param
-        R[0]=2*np.sum((yexp-eta)*(1+(dgammaE*lamb)**a)**((n-1)/a))
-        R[1]=2*np.sum((yexp-eta)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
-        R[2]=2*np.sum((yexp-eta)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-1)/a)))
-        R[3]=2*np.sum((yexp-eta)*(eta0-etainf)*((np.log(dgammaE*lamb)*(dgammaE*lamb)**a)/(a*((lamb*dgammaE)**a+1))-np.log((lamb*dgammaE)**a+1)/a**2)*((lamb*dgammaE)**a+1)**((n-1)/a))
-        R[4]=2*np.sum((yexp-eta)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1)))
-    return R
+
+def func(param):
+    eta = estimate(param,law,dgammaE)
+    etainf,eta0,lamb,a,n=param
+    eq1=np.sum((yexp-eta)*(1+(dgammaE*lamb)**a)**((n-1)/a))
+    eq2=np.sum((yexp-eta)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
+    eq3=np.sum((yexp-eta)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-1)/a)))
+    eq4=np.sum((yexp-eta)*(eta0-etainf)*((np.log(dgammaE*lamb)*(dgammaE*lamb)**a)/(a*((lamb*dgammaE)**a+1))-np.log((lamb*dgammaE)**a+1)/a**2)*((lamb*dgammaE)**a+1)**((n-1)/a))
+    eq5=np.sum((yexp-eta)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1))) 
+    return [eq1, eq2, eq3, eq4, eq5]
 
 # initial guesses
 def guess(dgammaE,etaE,law):
@@ -64,8 +60,18 @@ def guess(dgammaE,etaE,law):
     #eta_inf zero vs existe
     return param0
 
-#%%
+def bounds(dgammaE,etaE,law):
+    # bounds on variables
+    bnds0 = (0.0, 1.0e3)
+    no_bnds = (-1.0e10, 1.0e10)
+    if law==models[0]:
+        bnds = (no_bnds, no_bnds)
+     #   bnds = (bnds0, bnds0)
+    if law==models[1]:
+        bnds = (bnds0, bnds0, bnds0, bnds0, no_bnds)
+    return bnds
 
+#%%
 #Fetching experimental data
 #nameFile= #DEMANDER NOM DU FICHIER UTILISATEUR?
 models=[
@@ -74,52 +80,23 @@ models=[
         "Cross"]
 law=models[1]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
 [etaE,dgammaE]=readData("test2.txt")
-yexp=etaE
-#if dgammaE[1]<dgammaE[0]:
- #   dgammaE.reverse()
+if dgammaE[1]<dgammaE[0]:
+    dgammaE=dgammaE[::-1]
+    etaE=etaE[::-1]
+    print("Order of data was inversed")
     
-#Power Law model
-if law==models[0]:
-    param=np.zeros(2)
-#Carreau-Yasuda model
-if law==models[1]:
-    #param=etainf,etazero,lambd,a,n
-    param=np.zeros(5)
+yexp=etaE    
 
 param0=guess(dgammaE,etaE,law)
-
-tol=1e-04
-n=0
-N=100
-dxn=np.ones(len(param),dtype=float)
-param=param0
-J=np.zeros((len(param),len(param)),dtype=float)
-while la.norm(dxn)>tol and n<N:
-    res=np.transpose(R(yexp,param,law,dgammaE))
-    
-    for i in range(len(param)):
-        paramp=np.zeros(len(param))
-        paramp[i]=tol*param[i]
-        paramp=param+paramp
-        rp=R(yexp,paramp,law,dgammaE)
-        r=R(yexp,param,law,dgammaE)
-        J[:,i]=(rp-r)/(tol*param[i])
-    dxn=-np.dot(la.inv(J),res)
-    param=param+0.2*dxn
-    n=n+1
-    close=yexp-estimate(param, law, dgammaE)
+param=fsolve(func,param0)
 
 dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
 eta = estimate(param,law,dgamma)
 print(eta)
-
-
+#graph=affichage(param,law,etaE,dgammaE)
 #%%
-###PRINTING RESULTS###
-# show final objective
-#print('Final SSE Objective: ' + str(objective(param)))
-
 # print solution
+#def affichage(param,law,etaE,dgammaE):
 print('Solution')
 if law==models[0]:
     print('m = ' + str(param[0]))
@@ -146,8 +123,8 @@ plt.yscale("log")
 plt.xscale("log")
 plt.xlabel('dgamma')
 plt.ylabel('eta')
-plt.title("NewtonRaphson fonctionne")
 plt.ylim((ymin,max(etaE)+0.5*max(etaE)))
 plt.legend(['Measured','Predicted'],loc='best')
 plt.savefig('results.png')
 plt.show()
+    

@@ -37,36 +37,47 @@ def estimate(param,law,dgamma):
         eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
     return eta
 
-def CarYas(dgamma,etainf,etazero,lambd,a,n):
-    eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
-    return eta
+# def CarYas(dgamma,etainf,etazero,lambd,a,n):
+#     eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
+#     return eta
 
 #Least squares definition
 def objective(param):
-#    return np.sum(((estimate(param,law,dgammaE)-etaE)/etaE)**2)
-#    return np.log(estimate(param,law,dgammaE))-np.log(etaE)
     return np.sum(((estimate(param,law,dgammaE)-etaE)/etaE)**2)
+#    return np.log(estimate(param,law,dgammaE))-np.log(etaE)
+#    return estimate(param,law,dgammaE)-etaE
+
+
+
+# initial guesses
+def guess(dgammaE,etaE,law):
+    if law==models[0]:
+    #param=[m,n]
+    #    param0=[98.025251,-0.03266]
+        param0=[1.0,0.05]
+    if law==models[1]:
+#        param0=[0.0005,385.4000,0.0004209,1.0730147,-250.4070]
+#        etazero=max(etaE)
+#        etainf=0
+#        lamb=1/
+        param0=[min(etaE),max(etaE),0.00050,1.07000,-0.500000]
+#        param0=[etainf,etazero,lambd,a,n]
+        #if 
+    #eta_inf zero vs existe
+    return param0
+
+#%%
 #Fetching experimental data
 #nameFile= #DEMANDER NOM DU FICHIER UTILISATEUR?
 models=[
         "Power Law",
-        "CarreauYasuda"
+        "CarreauYasuda",
         "Cross"]
 law=models[1]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
-[etaE,dgammaE]=readData("test1.txt")
+[etaE,dgammaE]=readData("test3.txt")
 #if dgammaE[1]<dgammaE[0]:
  #   dgammaE.reverse()
     
-# initial guesses
-if law==models[0]:
-#    param0=[98.025251,-0.03266]
-    param0=[1.0,0.05]
-if law==models[1]:
-#    param0=[0.0005,385.4000,0.0004209,1.0730147,-250.4070]
-    param0=[min(etaE),max(etaE),0.00050,1.07000,-250.500000]
-    #if 
-#eta_inf zero vs existe
-
 
 # optimize
 # bounds on variables
@@ -77,15 +88,17 @@ if law==models[0]:
  #   bnds = (bnds0, bnds0)
 if law==models[1]:
     bnds = (bnds0, bnds0, bnds0, bnds0, no_bnds)
-#solution = minimize(objective,param0,method='SLSQP',bounds=bnds)
-solution = least_squares(objective,param0)
+param0=guess(dgammaE,etaE,law)
+
+solution = minimize(objective,param0,method='SLSQP',bounds=bnds)
+#solution = least_squares(objective,param0)
 #solution, cov=curve_fit(CarYas,dgammaE,etaE,param0,bounds=[0,1.0e10])
 param = solution.x
 
 dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
 eta = estimate(param,law,dgamma)
 print(eta)
-#############################################################################
+#%%
 ###PRINTING RESULTS###
 # show final objective
 #print('Final SSE Objective: ' + str(objective(param)))
@@ -105,9 +118,9 @@ if law==models[1]:
 #Statistics report    
 r2score(dgammaE,etaE,estimate(param,law,dgammaE))   
 
-ymin=min(etaE)
+ymin=min(etaE)-0.5*min(etaE)
 if min(eta)<ymin:
-    ymin=min(eta)
+    ymin=min(eta)-0.5*min(eta)
 
 # plot solution
 plt.figure(1)
@@ -117,7 +130,7 @@ plt.yscale("log")
 plt.xscale("log")
 plt.xlabel('dgamma')
 plt.ylabel('eta')
-plt.ylim((ymin,max(etaE)))
+plt.ylim((ymin,max(etaE)+0.5*max(etaE)))
 plt.legend(['Measured','Predicted'],loc='best')
 plt.savefig('results.png')
 plt.show()

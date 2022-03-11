@@ -10,13 +10,19 @@ import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import sys
+import os
+#from regTest3 import *
 
 
 
 root = Tk()
 root.title('Rheocal: Rheology model regression!')    
 root.geometry("800x400")
-def run():
+
+def run_regression():
+    os.system('regTest3.py')
+    
+def run_button_lab():
     myLabel=Label(frame, text="Solving for "+select_mod.get()+" model...").grid(row=2, column=0)
 
 # def graph():
@@ -46,7 +52,7 @@ choice.grid(row=0, column=0)
 
 
 #Run program after selection of model and file
-myButton=Button(frame,text="Run", padx=30,pady=10, command=run).grid(row=1, column=0)  
+myButton=Button(frame,text="Run", padx=30,pady=10, command=run_regression).grid(row=1, column=0)  
 #myButton=Button(frame,text="Run", padx=30,pady=10, command=graph).grid(row=1, column=0) 
 
 root.mainloop() 
