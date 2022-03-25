@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import math as mt
 import sys
 
+a=2
 
 def r2score(xexp,yexp,yreg):
     yavg=np.sum(yexp)/len(yexp)
@@ -36,8 +37,12 @@ def estimate(param,law,dgamma):
         eta=m*dgamma**(n-1)
     #Carreau-Yasuda model
     if law==models[1]:
-        etainf,etazero,lambd,a,n=param
+        etainf,etazero,lambd,n=param
         eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
+    #Cross model
+    if law==models[2]:
+        etainf,eta0,alpha,m=param
+        eta=(eta0-etainf)/(1+(alpha*dgamma)**m)+etainf  
     return eta
 
 #Matrice R(x)
@@ -45,15 +50,23 @@ def R(yexp,param,law,dgammaE):
     eta=estimate(param,law,dgammaE)
     R=np.zeros(len(param))
     if law=="Power Law":
-        R[0]=0
-        R[1]=0
+        m,n=param
+        R[0]=np.sum((yexp-eta)*dgammaE**(n-1))
+        R[1]=np.sum((yexp-eta)*m*dgammaE**(n-1)*np.log(dgammaE))
     if law=="CarreauYasuda":
-        etainf,eta0,lamb,a,n=param
-        R[0]=2*np.sum((yexp-eta)*(1+(dgammaE*lamb)**a)**((n-1)/a))
-        R[1]=2*np.sum((yexp-eta)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
-        R[2]=2*np.sum((yexp-eta)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-1)/a)))
-        R[3]=2*np.sum((yexp-eta)*(eta0-etainf)*((np.log(dgammaE*lamb)*(dgammaE*lamb)**a)/(a*((lamb*dgammaE)**a+1))-np.log((lamb*dgammaE)**a+1)/a**2)*((lamb*dgammaE)**a+1)**((n-1)/a))
-        R[4]=2*np.sum((yexp-eta)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1)))
+        etainf,eta0,lamb,n=param
+        R[0]=np.sum((yexp-eta)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
+        R[1]=np.sum((yexp-eta)*(1+(dgammaE*lamb)**a)**((n-1)/a))
+        R[2]=np.sum((yexp-eta)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-3)/a)))
+        R[3]=np.sum((yexp-eta)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1)))
+        etainf,eta0,alpha,m=param
+    if law=="Cross":  
+        etainf,eta0,alpha,m=param
+        R[0]=np.sum((yexp-eta)*(1-(1/(1+(alpha*dgammaE)**m))))
+        R[1]=np.sum((yexp-eta)*(1/(1+(alpha*dgammaE)**m)))
+        R[2]=np.sum((yexp-eta)*((etainf-eta0)*m*dgammaE**m*alpha**(m-1))/(1+(alpha*dgammaE)**m)**2)
+        R[3]=np.sum((yexp-eta)*((etainf-eta0)*np.log(alpha*dgammaE)*(alpha*dgammaE)**m)/(1+(alpha*dgammaE)**m)**2) 
+       
     return R
 
 # initial guesses
@@ -64,13 +77,17 @@ def guess(dgammaE,etaE,law):
         param0=[1.0,0.05]
     if law==models[1]:
 #       param0=[etainf,etazero,lambd,a,n]
-        param0=[min(etaE),max(etaE),0.2,2.0,0.500000]
+        param0=[min(etaE),max(etaE),0.2,0.500000]
         if mt.ceil(etaE[len(etaE)-1])>mt.ceil(etaE[len(etaE)-2]):
-            param0[4]=1.5
+            param0[3]=1.5
             print("passé ici!")
         #if mt.ceil(etaE[len(etaE)-1])==mt.ceil(etaE[len(etaE)-2]):
         #    param0[0]=0
     #eta_inf zero vs existe
+    if law==models[2]:
+    #param=[m,n]
+    #    param0=[98.025251,-0.03266]
+        param0=[0.1,1.2,0.1,1.2]
     return param0
 
 #%%
@@ -81,8 +98,8 @@ models=[
         "Power Law",
         "CarreauYasuda",
         "Cross"]
-law=models[1]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
-[etaE,dgammaE]=readData("test2.txt")
+law=models[2]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
+[etaE,dgammaE]=readData("test3.txt")
 yexp=etaE
 #if dgammaE[1]<dgammaE[0]:
  #   dgammaE.reverse()
@@ -93,34 +110,37 @@ if law==models[0]:
 #Carreau-Yasuda model
 if law==models[1]:
     #param=etainf,etazero,lambd,a,n
-    param=np.zeros(5)
+    param=np.zeros(4)
+if law==models[2]:
+    #param=etainf,etazero,lambd,a,n
+    param=np.zeros(4)
 
 param0=guess(dgammaE,etaE,law)
-
-tol=1e-04
-n=0
-N=100
-dxn=np.ones(len(param),dtype=float)
-param=param0
-J=np.zeros((len(param),len(param)),dtype=float)
-while la.norm(dxn)>tol and n<N:
-    res=np.transpose(R(yexp,param,law,dgammaE))
+def NewRaph(param,dgammaE,etaE,law):
+    tol=1e-04
+    n=0
+    N=100
+    dxn=np.ones(len(param),dtype=float)
+    param=param0
+    J=np.zeros((len(param),len(param)),dtype=float)
+    while la.norm(dxn)>tol and n<N:
+        res=np.transpose(R(yexp,param,law,dgammaE))
+        
+        for i in range(len(param)):
+            paramp=np.zeros(len(param))
+            paramp[i]=tol*param[i]
+            paramp=param+paramp
+            rp=R(yexp,paramp,law,dgammaE)
+            r=R(yexp,param,law,dgammaE)
+            J[:,i]=(rp-r)/(tol*param[i])
+        dxn=-np.dot(la.inv(J),res)
+        param=param+0.2*dxn
+        n=n+1
+        close=yexp-estimate(param, law, dgammaE)
+    return param
     
-    for i in range(len(param)):
-        paramp=np.zeros(len(param))
-        paramp[i]=tol*param[i]
-        paramp=param+paramp
-        rp=R(yexp,paramp,law,dgammaE)
-        r=R(yexp,param,law,dgammaE)
-        J[:,i]=(rp-r)/(tol*param[i])
-    dxn=-np.dot(la.inv(J),res)
-    param=param+0.2*dxn
-    n=n+1
-    close=yexp-estimate(param, law, dgammaE)
-
 dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
 eta = estimate(param,law,dgamma)
-print(eta)
 
 
 #%%
@@ -137,15 +157,17 @@ if law==models[1]:
     print('etainf = ' + str(param[0]))
     print('etazero = ' + str(param[1]))
     print('lambd = ' + str(param[2]))
-    print('a = ' + str(param[3]))
-    print('n = ' + str(param[4]))
+    print('a = ' + str(a))
+    print('n = ' + str(param[3]))
+if law==models[2]:
+    print('etainf = ' + str(param[0]))
+    print('etazero = ' + str(param[1]))
+    print('lambd = ' + str(param[2]))
+    print('a = ' + str(a))
+    print('n = ' + str(param[3]))
 
 #Statistics report    
 r2score(dgammaE,etaE,estimate(param,law,dgammaE))   
-
-ymin=min(etaE)-0.5*min(etaE)
-if min(eta)<ymin:
-    ymin=min(eta)-0.5*min(eta)
 
 # plot solution
 plt.figure(1)
@@ -156,7 +178,6 @@ plt.xscale("log")
 plt.xlabel('dgamma')
 plt.ylabel('eta')
 plt.title("NewtonRaphson fonctionne")
-plt.ylim((ymin,max(etaE)+0.5*max(etaE)))
 plt.legend(['Measured','Predicted'],loc='best')
 plt.savefig('results.png')
 plt.show()
