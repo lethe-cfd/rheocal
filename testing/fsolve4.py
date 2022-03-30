@@ -94,7 +94,7 @@ elif law==models[1]:
     param0=[min(etaE),max(etaE),0.2,0.500000]
     param=fsolve(funcCar,param0)
 elif law==models[2]:
-    param0=[0.1,1.2,0.1,1.2]
+    param0=[0.1,1.0,0.1,1.2]
     param=fsolve(funcCro,param0)
 
 dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)

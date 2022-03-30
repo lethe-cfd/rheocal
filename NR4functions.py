@@ -17,7 +17,7 @@ from tkinter import ttk, filedialog
 from tkinter.filedialog import askopenfile
 from PIL import ImageTk, Image
 
-a=2
+a=2.0
 
 
 def r2score(xexp,yexp,yreg):
@@ -59,21 +59,21 @@ def R(yexp,param,law,dgammaE):
     R=np.zeros(len(param))
     if law==models[0]:
         m,n=param
-        R[0]=np.sum((yexp-eta)*dgammaE**(n-1))
-        R[1]=np.sum((yexp-eta)*m*dgammaE**(n-1)*np.log(dgammaE))
+        R[0]=np.sum((yexp-eta)/(yexp**2)*dgammaE**(n-1))
+        R[1]=np.sum((yexp-eta)/(yexp**2)*m*dgammaE**(n-1)*np.log(dgammaE))
     if law==models[1]:
         etainf,eta0,lamb,n=param
-        R[0]=np.sum((yexp-eta)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
-        R[1]=np.sum((yexp-eta)*(1+(dgammaE*lamb)**a)**((n-1)/a))
-        R[2]=np.sum((yexp-eta)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-3)/a)))
-        R[3]=np.sum((yexp-eta)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1)))
+        R[0]=np.sum((yexp-eta)/(yexp**2)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
+        R[1]=np.sum((yexp-eta)/(yexp**2)*(1+(dgammaE*lamb)**a)**((n-1)/a))
+        R[2]=np.sum((yexp-eta)/(yexp**2)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-3)/a)))
+        R[3]=np.sum((yexp-eta)/(yexp**2)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1)))
         etainf,eta0,alpha,m=param
     if law==models[2]:  
         etainf,eta0,alpha,m=param
-        R[0]=np.sum((yexp-eta)*(1-(1/(1+(alpha*dgammaE)**m))))
-        R[1]=np.sum((yexp-eta)*(1/(1+(alpha*dgammaE)**m)))
-        R[2]=np.sum((yexp-eta)*((etainf-eta0)*m*dgammaE**m*alpha**(m-1))/(1+(alpha*dgammaE)**m)**2)
-        R[3]=np.sum((yexp-eta)*((etainf-eta0)*np.log(alpha*dgammaE)*(alpha*dgammaE)**m)/(1+(alpha*dgammaE)**m)**2) 
+        R[0]=np.sum((yexp-eta)/(yexp**2)*(1-(1/(1+(alpha*dgammaE)**m))))
+        R[1]=np.sum((yexp-eta)/(yexp**2)*(1/(1+(alpha*dgammaE)**m)))
+        R[2]=np.sum((yexp-eta)/(yexp**2)*((etainf-eta0)*m*dgammaE**m*alpha**(m-1))/(1+(alpha*dgammaE)**m)**2)
+        R[3]=np.sum((yexp-eta)/(yexp**2)*((etainf-eta0)*np.log(alpha*dgammaE)*(alpha*dgammaE)**m)/(1+(alpha*dgammaE)**m)**2) 
     return R
 
 # initial guesses
@@ -81,10 +81,11 @@ def guess(dgammaE,etaE,law):
     if law==models[0]:
     #param=[m,n]
     #    param0=[98.025251,-0.03266]
-        param0=[1.0,0.05]
+        param0=[80.0,0.05]
     if law==models[1]:
 #       param0=[etainf,etazero,lambd,a,n]
         param0=[min(etaE),max(etaE),0.2,0.500000]
+        #param0=[0.05,20,3,0.4]
         if mt.ceil(etaE[len(etaE)-1])>mt.ceil(etaE[len(etaE)-2]):
             param0[3]=1.5
             print("passé ici!")
@@ -94,48 +95,52 @@ def guess(dgammaE,etaE,law):
     if law==models[2]:
     #param=[m,n]
     #    param0=[98.025251,-0.03266]
-        param0=[0.1,1.2,0.1,1.2]
+        param0=[min(etaE),max(etaE),0.1,1.2]
     return param0
 
 # #%%
 
-# #Fetching experimental data
-# #nameFile= #DEMANDER NOM DU FICHIER UTILISATEUR?
+# # #Fetching experimental data
+# # #nameFile= #DEMANDER NOM DU FICHIER UTILISATEUR?
 models=[
         "Power Law",
         "Carreau",
-        "Cross"]
-# law=models[1]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
-# [etaE,dgammaE]=readData("test3.txt")
-# yexp=etaE
-# if dgammaE[1]<dgammaE[0]:
-#     dgammaE=dgammaE[::-1]
-#     etaE=etaE[::-1]
-#     print("Order of data was inversed")
+        "Cross",
+        "autofit"]
+law=models[2]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
+[etaE,dgammaE]=readData("test1.txt")
+yexp=etaE
+if dgammaE[1]<dgammaE[0]:
+    dgammaE=dgammaE[::-1]
+    etaE=etaE[::-1]
+    print("Order of data was inversed")
     
-# #Power Law model
-# if law==models[0]:
-#     param=np.zeros(2)
-# #Carreau-Yasuda model
-# if law==models[1]:
-#     #param=etainf,etazero,lambd,a,n
-#     param=np.zeros(4)
-# if law==models[2]:
-#     #param=etainf,etazero,lambd,a,n
-#     param=np.zeros(4)
-# param0=[min(etaE),max(etaE),0.2,0.500000]
+#Power Law model
+if law==models[0]:
+    param=np.zeros(2)
+#Carreau-Yasuda model
+if law==models[1]:
+    #param=etainf,etazero,lambd,a,n
+    param=np.zeros(4)
+if law==models[2]:
+    #param=etainf,etazero,lambd,a,n
+    param=np.zeros(4)
+    
 
 
-# param0=guess(dgammaE,etaE,law)
-# print(param0)
+
+param0=guess(dgammaE,etaE,law)
+
 def regression(param0,law,dgammaE,yexp):
-    tol=1e-04
+
+    tol=1e-05
     n=0
-    N=100
+    N=200
     x=param0
     dxn=np.ones(len(x),dtype=float)
     J=np.zeros((len(x),len(x)),dtype=float)
     while la.norm(dxn)>tol and n<N:
+        theta=1
         res=np.transpose(R(yexp,x,law,dgammaE))
         
         for i in range(len(x)):
@@ -146,55 +151,60 @@ def regression(param0,law,dgammaE,yexp):
             r=R(yexp,x,law,dgammaE)
             J[:,i]=(rp-r)/(tol*x[i])
         dxn=-np.dot(la.inv(J),res)
-        x=x+0.2*dxn
+
+        while la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE)):
+            theta=0.5*theta
+            
+        x=x+theta*dxn
         n=n+1
+    print(theta)
     return x
 
 
-# param= regression(param0,law,dgammaE,etaE)
+param= regression(param0,law,dgammaE,etaE)
 
-# dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
-# eta = estimate(param,law,dgamma)
+dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
+eta = estimate(param,law,dgamma)
 
 
-# #%%
-# ###PRINTING RESULTS###
-# # show final objective
-# #print('Final SSE Objective: ' + str(objective(param)))
+#%%
+###PRINTING RESULTS###
+# show final objective
+#print('Final SSE Objective: ' + str(objective(param)))
 
-# # print solution
-# print('Solution')
-# if law==models[0]:
-#     print('m = ' + str(param[0]))
-#     print('n = ' + str(param[1]))
-# if law==models[1]:
-#     print('etainf = ' + str(param[0]))
-#     print('etazero = ' + str(param[1]))
-#     print('lambd = ' + str(param[2]))
-#     print('a = ' + str(a))
-#     print('n = ' + str(param[3]))
-# if law==models[2]:
-#     print('etainf = ' + str(param[0]))
-#     print('etazero = ' + str(param[1]))
-#     print('alpha = ' + str(param[2]))
-#     print('a = ' + str(a))
-#     print('n = ' + str(param[3]))
+# print solution
+print('Solution')
+if law==models[0]:
+    print('m = ' + str(param[0]))
+    print('n = ' + str(param[1]))
+if law==models[1]:
+    print('etainf = ' + str(param[0]))
+    print('etazero = ' + str(param[1]))
+    print('lambd = ' + str(param[2]))
+    print('a = ' + str(a))
+    print('n = ' + str(param[3]))
+if law==models[2]:
+    print('etainf = ' + str(param[0]))
+    print('etazero = ' + str(param[1]))
+    print('alpha = ' + str(param[2]))
+    print('a = ' + str(a))
+    print('n = ' + str(param[3]))
 
-# #Statistics report    
-# r2score(dgammaE,etaE,estimate(param,law,dgammaE))   
+#Statistics report    
+r2score(dgammaE,etaE,estimate(param,law,dgammaE))   
 
-# # plot solution
-# plt.figure(1)
-# plt.plot(dgammaE,etaE,'bx')
-# plt.plot(dgamma,eta,'k-')
-# plt.yscale("log")
-# plt.xscale("log")
-# plt.xlabel('dgamma')
-# plt.ylabel('eta')
-# plt.title("NewtonRaphson")
-# plt.legend(['Measured','Predicted'],loc='best')
-# plt.savefig('results.png')
-# plt.show()
+# plot solution
+plt.figure(1)
+plt.plot(dgammaE,etaE,'bx')
+plt.plot(dgamma,eta,'k-')
+plt.yscale("log")
+plt.xscale("log")
+plt.xlabel('dgamma')
+plt.ylabel('eta')
+plt.title("NewtonRaphson")
+plt.legend(['Measured','Predicted'],loc='best')
+plt.savefig('test1Cro.png')
+plt.show()
 
 
 
