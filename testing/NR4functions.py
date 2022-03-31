@@ -103,7 +103,37 @@ def guess(dgammaE,etaE,law):
         param0=[min(etaE),max(etaE),0.1,1.2]
     return param0
 
+# #%%
+
+# # #Fetching experimental data
+# # #nameFile= #DEMANDER NOM DU FICHIER UTILISATEUR?
+
+#law=models[2]#DEMANDER NOM DE LA MÉTHODE UTILISATEUR
+# [etaE,dgammaE]=readData("test1.txt")
+# yexp=etaE
+if dgammaE[1]<dgammaE[0]:
+    dgammaE=dgammaE[::-1]
+    etaE=etaE[::-1]
+    print("Order of data was inversed")
+    
+#Power Law model
+if law==models[0]:
+    param=np.zeros(2)
+#Carreau-Yasuda model
+if law==models[1]:
+    #param=etainf,etazero,lambd,a,n
+    param=np.zeros(4)
+if law==models[2]:
+    #param=etainf,etazero,lambd,a,n
+    param=np.zeros(4)
+    
+
+
+
+# param0=guess(dgammaE,etaE,law)
+
 def regression(param0,law,dgammaE,yexp):
+
     tol=1e-05
     n=0
     N=200
@@ -125,6 +155,80 @@ def regression(param0,law,dgammaE,yexp):
 
         while la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE)):
             theta=0.5*theta
+            
         x=x+theta*dxn
         n=n+1
+    print(theta)
     return x
+
+
+# param= regression(param0,law,dgammaE,etaE)
+
+# dgamma=np.logspace(np.log10(min(dgammaE)),np.log10(max(dgammaE)),100)
+# eta = estimate(param,law,dgamma)
+
+
+#%%
+###PRINTING RESULTS###
+# show final objective
+#print('Final SSE Objective: ' + str(objective(param)))
+
+# # print solution
+# print('Solution')
+# if law==models[0]:
+#     print('m = ' + str(param[0]))
+#     print('n = ' + str(param[1]))
+# if law==models[1]:
+#     print('etainf = ' + str(param[0]))
+#     print('etazero = ' + str(param[1]))
+#     print('lambd = ' + str(param[2]))
+#     print('a = ' + str(a))
+#     print('n = ' + str(param[3]))
+# if law==models[2]:
+#     print('etainf = ' + str(param[0]))
+#     print('etazero = ' + str(param[1]))
+#     print('alpha = ' + str(param[2]))
+#     print('a = ' + str(a))
+#     print('n = ' + str(param[3]))
+
+# #Statistics report    
+# r2score(dgammaE,etaE,estimate(param,law,dgammaE))   
+
+# # plot solution
+# plt.figure(1)
+# plt.plot(dgammaE,etaE,'bx')
+# plt.plot(dgamma,eta,'k-')
+# plt.yscale("log")
+# plt.xscale("log")
+# plt.xlabel('dgamma')
+# plt.ylabel('eta')
+# plt.title("NewtonRaphson")
+# plt.legend(['Measured','Predicted'],loc='best')
+# plt.savefig('result.png')
+# plt.show()
+
+
+
+
+# def NewRaph(param,dgammaE,etaE,law):
+#     tol=1e-04
+#     n=0
+#     N=100
+#     dxn=np.ones(len(param),dtype=float)
+#     param=param0
+#     J=np.zeros((len(param),len(param)),dtype=float)
+#     while la.norm(dxn)>tol and n<N:
+#         res=np.transpose(R(yexp,param,law,dgammaE))
+        
+#         for i in range(len(param)):
+#             paramp=np.zeros(len(param))
+#             paramp[i]=tol*param[i]
+#             paramp=param+paramp
+#             rp=R(yexp,paramp,law,dgammaE)
+#             r=R(yexp,param,law,dgammaE)
+#             J[:,i]=(rp-r)/(tol*param[i])
+#         dxn=-np.dot(la.inv(J),res)
+#         param=param+0.2*dxn
+#         n=n+1
+#         close=yexp-estimate(param, law, dgammaE)
+#     return param

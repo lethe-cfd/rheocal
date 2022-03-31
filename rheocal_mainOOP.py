@@ -43,9 +43,9 @@ options=[
 
 root = Tk()
 root.title('Rheocal: Rheology model regression!') 
-#root.state('zoomed')   
+root.state('zoomed')   
 root.resizable(False, False)
-root.geometry("1200x800")
+#root.geometry("1200x800")
 
 my_notebook=ttk.Notebook(root)
 my_notebook.grid(row=0, column=0)
@@ -259,7 +259,7 @@ if __name__=='__main__':
     btn_run.grid(row=8, column=9,padx=10,sticky="e")
 
     #%% RESULTS
-    rframe= LabelFrame(masterf, text="Results", padx=10,pady=10)
+    rframe= LabelFrame(masterf, text="Results", padx=40,pady=20)
     rframe.grid(row=1,column=0,padx=10,pady=10)
 
     my_notebook.add(masterf, text="Input")
