@@ -23,8 +23,7 @@ from NR4functions import *
 options=[
     "Power Law",
     "Carreau",
-    "Cross",
-    "autofit"]
+    "Cross"]
 
 root = Tk()
 root.title('Rheocal: Rheology model regression!') 
@@ -35,7 +34,7 @@ root.resizable(False, False)
 window=ttk.Notebook(root)
 window.grid(row=0, column=0)
 
-help_tab_frame= LabelFrame(root, width=1200,heigh=800)
+help_tab_frame= LabelFrame(root, width=1200,heigh=500)
 help_tab_frame.grid(row=0,column=0)
 
 input_tab_frame= LabelFrame(root, width=1200,heigh=800)
@@ -117,7 +116,7 @@ if __name__=='__main__':
         if select_mod.get()==options[2]:
             param_lbl=["eta_inf","eta_0","alpha","m"]
             equation="$\eta (\dot \gamma) = \eta _{\infty} + \\frac {\eta _0 - \eta _{\infty}}{ 1+ (\\alpha_c \lambda )^m }$"
-            #\\frac {\eta _0 - \eta _{\infty}}{1+(\alpha _c \lambda )^m}
+
         #Image of the model law with the grec letter parameters
         formula.text(0.5,0.5,equation,horizontalalignment='center',verticalalignment='center', fontsize = 13)
         eqcanvas = FigureCanvasTkAgg(eqfig, master=rframe)
@@ -139,9 +138,6 @@ if __name__=='__main__':
             #retrieve the input value of the parameter guess
             reg.guess.append(guess_input)
             
-
-
-    
             
     def initialGraph():
         #clear param to allow for iterations on the guess values
@@ -226,6 +222,18 @@ if __name__=='__main__':
     
     #%% INPUT
     ### 1. HELP FIGURE FRAME ###    
+    #help_canvas=Canvas(help_tab_frame,bg="white")
+    #help_canvas.grid(row=0,column=0)
+    
+    open_help_img= Image.open("input_help.png")
+    resized_img=open_help_img.resize((400,500), Image.ANTIALIAS)
+    
+    sized_help_img= ImageTk.PhotoImage(resized_img)
+    help_lbl=Label(help_tab_frame, image=sized_help_img)
+    help_lbl.grid(row=0,column=0)
+    
+    #help_img= PhotoImage(file="input_help.png")
+    #input_helpimg= help_canvas.create_image(0,0,anchor=NW, image=help_img)
     
     ### 2. INPUT DATA FRAME ###
     frame= LabelFrame(input_tab_frame, text="Select Parameters", padx=20,pady=20)

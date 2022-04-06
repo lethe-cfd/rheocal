@@ -22,8 +22,7 @@ a=2.0
 models=[
         "Power Law",
         "Carreau",
-        "Cross",
-        "autofit"]
+        "Cross"]
 
 def r2score(xexp,yexp,yreg):
     yavg=np.sum(yexp)/len(yexp)
@@ -34,14 +33,13 @@ def r2score(xexp,yexp,yreg):
     print(coeff)
     return coeff
 
-#Importing data function
+
 def readData(inputFile):
     data = np.loadtxt(inputFile, dtype=float, usecols = (0,1))
     dgammaE=data[:,0]
     etaE=data[:,1]
     return etaE, dgammaE
 
-#Theoric model
 def estimate(param,law,dgamma):
     eta=[]
     #Power Law model
@@ -58,7 +56,7 @@ def estimate(param,law,dgamma):
         eta=(eta0-etainf)/(1+(alpha*dgamma)**m)+etainf  
     return eta
 
-#Matrice R(x)
+
 def R(yexp,param,law,dgammaE):
     eta=estimate(param,law,dgammaE)
     R=np.zeros(len(param))
