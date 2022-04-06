@@ -43,7 +43,7 @@ input_tab_frame.grid(row=0,column=0)
 result_tab_frame= LabelFrame(root, width=1200,heigh=800)
 result_tab_frame.grid(row=0,column=0)
 class NLR:
-    def __init__(self, law='Power Law',n=0,tol=1e-05,dgammaE=[],etaE=[],guess=[],param=[],dgamma=[],eta=[]):
+    def __init__(self, law='Power Law',n=0,tol=1e-05,theta=1.0,dgammaE=[],etaE=[],guess=[],param=[],dgamma=[],eta=[]):
         self.dgammaE = dgammaE
         self.etaE=etaE
         self.law=law
@@ -53,6 +53,7 @@ class NLR:
         self.eta=eta
         self.n=n
         self.tol=tol
+        self.theta=theta
 
 if __name__=='__main__':
     reg=NLR()
@@ -85,7 +86,7 @@ if __name__=='__main__':
           ax.set_yscale("log")
           ax.set_xscale("log")
           ax.set_xlabel("$\dot \gamma [1/s]$")
-          ax.set_ylabel("$\eta$")
+          ax.set_ylabel("$\eta [Pa \cdot s]$")
           fig.tight_layout()
           ax.autoscale(enable=True, axis='both')
                
@@ -104,6 +105,7 @@ if __name__=='__main__':
         formula = eqfig.add_subplot()
         formula.get_xaxis().set_visible(False)
         formula.get_yaxis().set_visible(False)
+        
         #Default Power Law equation
         equation="$\eta (\dot \gamma) = m\dot \gamma^{n-1}$"
         #Define label of each model's parameter
@@ -164,7 +166,7 @@ if __name__=='__main__':
         ax.set_yscale("log")
         ax.set_xscale("log")
         ax.set_xlabel("$\dot \gamma [1/s]$")
-        ax.set_ylabel("$\eta$")
+        ax.set_ylabel("$\eta [Pa \cdot s]$")
         ax.legend(['input data','guess'])
         fig2.tight_layout()
         ax.autoscale(enable=True, axis='both')
@@ -176,7 +178,7 @@ if __name__=='__main__':
     
     def Runregression():
         #caling the regression function
-        reg.param,n= regression(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n)  
+        reg.param,reg.n,reg.theta= regression(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n,reg.theta)  
         #viscosity found with the calculated parameters (to be plotted)
         reg.eta = estimate(reg.param,select_mod.get(),reg.dgamma)
         
@@ -200,7 +202,7 @@ if __name__=='__main__':
         axf.set_yscale("log")
         axf.set_xscale("log")
         axf.set_xlabel("$\dot \gamma [1/s]$")
-        axf.set_ylabel("$\eta$")
+        axf.set_ylabel("$\eta [Pa \cdot s]$")
         axf.legend(['input data','result'])
         axf.autoscale(enable=True, axis='both')
         ffig.tight_layout()
@@ -215,8 +217,18 @@ if __name__=='__main__':
         fcanvas.get_tk_widget().grid(row=0,column=0)
         
         #Printing regression data results
-        lbl_nandtol = Label(master=result_data_frm, text=" - Regression performed in "+'{:.0f}'.format(n)+"/500 iterations.\n - Tolerance of "+'{:.3e}'.format(reg.tol))
-        lbl_nandtol.grid(row=0, column=0, sticky="w")
+        R2,mean2err=r2score(reg.etaE,estimate(reg.param,select_mod.get(),reg.dgammaE))
+
+        lbl_n = Label(master=result_data_frm, text=" - Regression performed in "+'{:.0f}'.format(reg.n)+"/500 iterations.")
+        lbl_n.grid(row=0, column=0,pady=10, sticky="w")
+        lbl_tol = Label(master=result_data_frm, text=" - Tolerance of "+'{:.3e}'.format(reg.tol))
+        lbl_tol.grid(row=1, column=0, pady=10, sticky="w")
+        # lbl_theta = Label(master=result_data_frm, text=" - Relaxation factor "+'{:.3f}'.format(reg.theta))
+        # lbl_theta.grid(row=2, column=0, pady=10, sticky="w")
+        lbl_mean2err = Label(master=result_data_frm, text=" - Mean squared error "+'{:.6e}'.format(mean2err))
+        lbl_mean2err.grid(row=3, column=0, pady=10, sticky="w")   
+        lbl_R2 = Label(master=result_data_frm, text=" - Determination coefficient "+'{:.5f}'.format(R2))
+        lbl_R2.grid(row=4, column=0, pady=10, sticky="w")        
 
 
     

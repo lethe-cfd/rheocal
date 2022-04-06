@@ -24,14 +24,14 @@ models=[
         "Carreau",
         "Cross"]
 
-def r2score(xexp,yexp,yreg):
+def r2score(yexp,yreg):
+    mean2err=np.sum(np.power(yexp-yreg,2))/len(yexp)
+    
     yavg=np.sum(yexp)/len(yexp)
-    avg=yexp-yavg
-    reg=yexp-yreg
-    coeff=(np.sum(np.power(avg,2))-np.sum(np.power(reg,2)))/np.sum(np.power(avg,2))
-    print('\nR2 = ')
-    print(coeff)
-    return coeff
+    avg=(yexp-yavg)
+    reg=(yexp-yreg)
+    R2=(np.sum(np.power(avg,2))-np.sum(np.power(reg,2)))/np.sum(np.power(avg,2))  
+    return R2,mean2err
 
 
 def readData(inputFile):
@@ -78,26 +78,32 @@ def R(yexp,param,law,dgammaE):
         R[3]=np.sum((yexp-eta)/(yexp**2)*((etainf-eta0)*np.log(alpha*dgammaE)*(alpha*dgammaE)**m)/(1+(alpha*dgammaE)**m)**2) 
     return R
 
-def regression(param0,law,dgammaE,yexp,tol,n):
+def regression(param0,law,dgammaE,yexp,tol,n,theta):
     N=500
     x=param0
     dxn=np.ones(len(x),dtype=float)
     J=np.zeros((len(x),len(x)),dtype=float)
     while la.norm(dxn)>tol and n<N:
+        relaxation=False
         theta=1
         res=np.transpose(R(yexp,x,law,dgammaE))
         
         for i in range(len(x)):
             xp=np.zeros(len(x))
-            xp[i]=tol*x[i]
+            xp[i]=0.0001*x[i]
             xp=x+xp
             rp=R(yexp,xp,law,dgammaE)
             r=R(yexp,x,law,dgammaE)
             J[:,i]=(rp-r)/(tol*x[i])
         dxn=-np.dot(la.inv(J),res)
-
-        while la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE)):
+        
+        try:
+            relaxation=la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE))
+        except:
+            relaxation=True
+        while relaxation: 
             theta=0.5*theta
+            relaxation=la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE))
         x=x+theta*dxn
         n=n+1
-    return x,n
+    return x,n,theta
