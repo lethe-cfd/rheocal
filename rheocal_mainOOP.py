@@ -44,7 +44,7 @@ input_tab_frame.grid(row=0,column=0)
 result_tab_frame= LabelFrame(root, width=1200,heigh=800)
 result_tab_frame.grid(row=0,column=0)
 class NLR:
-    def __init__(self, law='Power Law',n=0,tol=1e-04,dgammaE=[],etaE=[],guess=[],param=[],dgamma=[],eta=[]):
+    def __init__(self, law='Power Law',n=0,tol=1e-05,dgammaE=[],etaE=[],guess=[],param=[],dgamma=[],eta=[]):
         self.dgammaE = dgammaE
         self.etaE=etaE
         self.law=law
@@ -115,11 +115,11 @@ if __name__=='__main__':
             param_lbl=["eta _inf","eta _0","lambda","n"]
             equation="$\\frac {\eta (\dot \gamma) - \eta _{\infty}}{\eta _0 - \eta _{\infty}} = [1+(\dot \gamma \lambda )^a]^{\\frac {n-1}{a}}$"
         if select_mod.get()==options[2]:
-            param_lbl=["eta_inf","eta_0",'alpha',"n"]
-            #equation="$\eta _a = \eta _{\infty} + \\frac {\eta _0 - \eta _{\infty}}{1+(\alpha _c \lambda )^m}$"
-            
+            param_lbl=["eta_inf","eta_0","alpha","m"]
+            equation="$\eta (\dot \gamma) = \eta _{\infty} + \\frac {\eta _0 - \eta _{\infty}}{ 1+ (\\alpha_c \lambda )^m }$"
+            #\\frac {\eta _0 - \eta _{\infty}}{1+(\alpha _c \lambda )^m}
         #Image of the model law with the grec letter parameters
-        formula.text(0.1,0.1,equation, fontsize = 13)
+        formula.text(0.5,0.5,equation,horizontalalignment='center',verticalalignment='center', fontsize = 13)
         eqcanvas = FigureCanvasTkAgg(eqfig, master=rframe)
         eqcanvas.draw()
         eqcanvas.get_tk_widget().grid(row=0,column=0)
@@ -190,7 +190,7 @@ if __name__=='__main__':
         if select_mod.get()==options[1]:
             param_lbl=["eta_inf","eta_0",'lambda',"n"]
         if select_mod.get()==options[2]:
-            param_lbl=["eta_inf","eta_0",'alpha',"n"]
+            param_lbl=["eta_inf","eta_0",'alpha',"m"]
     
         for x in range(len(param_lbl)):
             lbl_ans = Label(master=rframe, text=param_lbl[x]+" = "+'{:.4f}'.format(reg.param[x]))
