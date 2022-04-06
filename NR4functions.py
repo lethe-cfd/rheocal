@@ -103,10 +103,8 @@ def guess(dgammaE,etaE,law):
         param0=[min(etaE),max(etaE),0.1,1.2]
     return param0
 
-def regression(param0,law,dgammaE,yexp):
-    tol=1e-05
-    n=0
-    N=200
+def regression(param0,law,dgammaE,yexp,tol,n):
+    N=500
     x=param0
     dxn=np.ones(len(x),dtype=float)
     J=np.zeros((len(x),len(x)),dtype=float)
@@ -127,4 +125,4 @@ def regression(param0,law,dgammaE,yexp):
             theta=0.5*theta
         x=x+theta*dxn
         n=n+1
-    return x
+    return x,n
