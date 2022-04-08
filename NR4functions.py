@@ -41,6 +41,15 @@ def readData(inputFile):
     return etaE, dgammaE
 
 def estimate(param,law,dgamma):
+    """
+    evaluate the viscosity according to a rheology law for a shear rate vector
+    Inputs:
+    - param: rheology model parameters
+    - law: rheology model
+    - dgamma: shear rate vector
+    Output
+    eta: viscosity
+    """
     eta=[]
     #Power Law model
     if law==models[0]:
@@ -102,6 +111,7 @@ def regression(param0,law,dgammaE,yexp,tol,n,theta):
         except:
             relaxation=True
         while relaxation: 
+            print(theta)
             theta=0.5*theta
             relaxation=la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE))
         x=x+theta*dxn

@@ -1,23 +1,28 @@
 # -*- coding: utf-8 -*-
 """
+Rheocal: Non linear regression program for certain rheology models including:
+    - Power Law (2 parameters)
+    - Carreau (4 parameters)
+    - Cross (4 parameters)
+    
 Created on Mon Mar 21 17:37:18 2022
-
-@author: Bérénice
+@author: Bérénice Dubois
 """
 
+#Import librairies
 from tkinter import *
 from tkinter import ttk, filedialog
+from PIL import ImageTk, Image
+from tkinter.filedialog import askopenfile
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
-from tkinter.filedialog import askopenfile
-from PIL import ImageTk, Image
-import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+import numpy as np
 import sys
+from NR4functions import * #Also accessible in rheocal project
 
-from NR4functions import *
-
+#%%
 
 #Rheology Model list of options
 options=[
@@ -25,15 +30,17 @@ options=[
     "Carreau",
     "Cross"]
 
+#Beginning of user interface main loop
 root = Tk()
 root.title('Rheocal: Rheology model regression!') 
+#window first automaticaly fits whole screen but can be resized
 root.state('zoomed')   
-root.resizable(False, False)
-#root.geometry("1200x800")
-
+root.resizable(True, True)
+#Create notebook to make tabs
 window=ttk.Notebook(root)
 window.grid(row=0, column=0)
 
+#Main frame on each tab to place all other frames/widgets
 help_tab_frame= LabelFrame(root, width=1200,heigh=500)
 help_tab_frame.grid(row=0,column=0)
 
@@ -42,11 +49,20 @@ input_tab_frame.grid(row=0,column=0)
 
 result_tab_frame= LabelFrame(root, width=1200,heigh=800)
 result_tab_frame.grid(row=0,column=0)
+
+#%%
+
 class NLR:
-    def __init__(self, law='Power Law',n=0,tol=1e-05,theta=1.0,dgammaE=[],etaE=[],guess=[],param=[],dgamma=[],eta=[]):
+    """
+    Non Linear Regression: Store values printed on the user interface
+    - n: number of iterations on solving method
+    - tol: tolerance on regression answer
+    - dgammaE, etaE, guess: user input for experimental shear rate, viscosity and initial guesses on parameters
+    - dgamma, eta, param: calculated values for viscosity for a sample shear rate vector, calculated parameters
+    """
+    def __init__(self,n=0,tol=1e-05,theta=1.0,dgammaE=[],etaE=[],guess=[],dgamma=[],eta=[],param=[]):
         self.dgammaE = dgammaE
         self.etaE=etaE
-        self.law=law
         self.guess=guess
         self.param=param
         self.dgamma=dgamma
@@ -56,10 +72,48 @@ class NLR:
         self.theta=theta
 
 if __name__=='__main__':
+    #regression problem is initialized
     reg=NLR()
+    
+    def figure_opt(subplot):
+          #Adjust graph axes display
+          subplot.set_yscale("log")
+          subplot.set_xscale("log")
+          subplot.set_xlabel("$\dot \gamma [1/s]$")
+          subplot.set_ylabel("$\eta [Pa \cdot s]$")
+          subplot.autoscale(enable=True, axis='both')
+          
+    def formula_img(law):
+        """
+        Display the select model's formula in a canvas
+           * equation canvas created to show equation
+        """
+        #Figure settings
+        eqfig = plt.figure(figsize=(3, 1), dpi=100)
+        formula = eqfig.add_subplot()
+        formula.get_xaxis().set_visible(False)
+        formula.get_yaxis().set_visible(False)
+        #Selected equation to print
+        if law==options[0]:
+            equation="$\eta (\dot \gamma) = m\dot \gamma^{n-1}$"
+        if law==options[1]:
+            equation="$\\frac {\eta (\dot \gamma) - \eta _{\infty}}{\eta _0 - \eta _{\infty}} = [1+(\dot \gamma \lambda )^a]^{\\frac {n-1}{a}}$"
+        if law==options[2]:
+            equation="$\eta (\dot \gamma) = \eta _{\infty} + \\frac {\eta _0 - \eta _{\infty}}{ 1+ (\\alpha_c \lambda )^m }$"
+            
+        #Print model law with the grec letter parameters
+        formula.text(0.5,0.5,equation,horizontalalignment='center',verticalalignment='center', fontsize = 13)
+        eqcanvas = FigureCanvasTkAgg(eqfig, master=rframe)
+        eqcanvas.draw()
+        eqcanvas.get_tk_widget().grid(row=0,column=0)
+          
     def open_file():
-    #function to open and read files
+       """
+       Open and read files, then extract the data and plot it on the interface
+         * canvas created in input tab on the right to plot
+       """
        file = filedialog.askopenfile(mode='r', filetypes=[('Text files', '*.txt'),('DAT files','*.dat'),('CSV files','*.csv')])
+       path=[]
        if file:
           #Extract and print the file name 
           path=str(file.name).split("/")#list of the filepath directory path
@@ -68,75 +122,59 @@ if __name__=='__main__':
           
           #Extract data from file
           f = open(file.name, 'r')
-          del_vec=np.arange(0,len(reg.dgammaE),1,dtype=int)
-          reg.dgammaE=np.delete(reg.dgammaE,del_vec)
-          reg.etaE=np.delete(reg.etaE,del_vec)
           [reg.etaE,reg.dgammaE]=readData(file.name)
-          
+               
           ### Draw input data ###
-          #Initialize guess canvas
+          #Initialize canvas
           fig = plt.Figure(figsize=(5, 4), dpi=100)
           canvas = FigureCanvasTkAgg(fig, master=gframe)
           canvas.draw()
 
-
-          #Plotting guess values
+          #Plotting input values
           ax = fig.add_subplot()
-          line_input = ax.plot(reg.dgammaE,reg.etaE,'bx')
-          ax.set_yscale("log")
-          ax.set_xscale("log")
-          ax.set_xlabel("$\dot \gamma [1/s]$")
-          ax.set_ylabel("$\eta [Pa \cdot s]$")
+          line_input = ax.plot(reg.dgammaE,reg.etaE,'gx')
+          figure_opt(ax)
           fig.tight_layout()
-          ax.autoscale(enable=True, axis='both')
-               
+         
+          #Navigation Toolbar
           toolbar = NavigationToolbar2Tk(canvas, gframe)
           toolbar.update()
-        
           toolbar.grid(row=1,column=0,padx=10,pady=10)
+          
+          #Printing embedded canvas onto the interface
           canvas.get_tk_widget().grid(row=0,column=0)
           
-    
-    def initialGuess(event):
+    def enter_guess(event):
+        """
+        Ask for and retrieve user entered initial guesses on parameters
+           * Tkinter variables only, must be transformed into floats
+        """
+        #show equation of the selected model
+        formula_img(select_mod.get())
+        
+        #Asking for initial guesses
         label = Label(frame, text="Please define initial guesses on parameters:", font=('Arial 12'))
-        label.grid(row=3, column=0,columnspan=3, pady=15)
-        
-        eqfig = plt.figure(figsize=(3, 1), dpi=100)
-        formula = eqfig.add_subplot()
-        formula.get_xaxis().set_visible(False)
-        formula.get_yaxis().set_visible(False)
-        
-        #Default Power Law equation
-        equation="$\eta (\dot \gamma) = m\dot \gamma^{n-1}$"
+        label.grid(row=3, column=0,columnspan=3, pady=15)       
         #Define label of each model's parameter
         if select_mod.get()==options[0]:
             param_lbl=["m","n"]
-            equation="$\eta (\dot \gamma) = m\dot \gamma^{n-1}$"
         if select_mod.get()==options[1]:
             param_lbl=["eta _inf","eta _0","lambda","n"]
-            equation="$\\frac {\eta (\dot \gamma) - \eta _{\infty}}{\eta _0 - \eta _{\infty}} = [1+(\dot \gamma \lambda )^a]^{\\frac {n-1}{a}}$"
         if select_mod.get()==options[2]:
             param_lbl=["eta_inf","eta_0","alpha","m"]
-            equation="$\eta (\dot \gamma) = \eta _{\infty} + \\frac {\eta _0 - \eta _{\infty}}{ 1+ (\\alpha_c \lambda )^m }$"
 
-        #Image of the model law with the grec letter parameters
-        formula.text(0.5,0.5,equation,horizontalalignment='center',verticalalignment='center', fontsize = 13)
-        eqcanvas = FigureCanvasTkAgg(eqfig, master=rframe)
-        eqcanvas.draw()
-        eqcanvas.get_tk_widget().grid(row=0,column=0)
-        
         #Print the parameter labels and show entry box to the right
-        for x in range(len(param_lbl)):
+        for i in range(len(param_lbl)):
+            lbl_m = Label(master=frame, text=param_lbl[i]+" =")
+            lbl_m.grid(row=4+i, column=0, sticky="e")
+            #Entry boxes showed with suggestions for eta_0 and eta_inf
             guess_input=Entry(frame,width=15)
-
-            lbl_m = Label(master=frame, text=param_lbl[x]+" =")
-            lbl_m.grid(row=4+x, column=0, sticky="e")
-            if (select_mod.get()==options[1] or select_mod.get()==options[2]) and (x==0 or x==1):
-                if x==0:
+            guess_input.grid(row=4+i, column=1,sticky="w")
+            if (select_mod.get()==options[1] or select_mod.get()==options[2]) and (i==0 or i==1):
+                if i==0:
                     guess_input.insert(0,str(1.1*min(reg.etaE)))
-                if x==1:
+                if i==1:
                     guess_input.insert(0,str(0.99*max(reg.etaE)))
-            guess_input.grid(row=4+x, column=1,sticky="w")
             #retrieve the input value of the parameter guess
             reg.guess.append(guess_input)
             
@@ -163,13 +201,12 @@ if __name__=='__main__':
         ax = fig2.add_subplot()
         #Plotting new figure with guess values AND input data
         line_guess = ax.plot(reg.dgammaE,reg.etaE,'gx',reg.dgamma,reg.eta,'b-')
-        ax.set_yscale("log")
-        ax.set_xscale("log")
-        ax.set_xlabel("$\dot \gamma [1/s]$")
-        ax.set_ylabel("$\eta [Pa \cdot s]$")
+        
+        figure_opt(ax)     
         ax.legend(['input data','guess'])
+
+        
         fig2.tight_layout()
-        ax.autoscale(enable=True, axis='both')
         #printing onto the canvas the modified plot
         canvas = FigureCanvasTkAgg(fig2, master=gframe)
         canvas.draw()
@@ -199,12 +236,10 @@ if __name__=='__main__':
         axf = ffig.add_subplot()
         #Plotting new figure with guess values AND input data
         line_final = axf.plot(reg.dgammaE,reg.etaE,'gx',reg.dgamma,reg.eta,'k-')
-        axf.set_yscale("log")
-        axf.set_xscale("log")
-        axf.set_xlabel("$\dot \gamma [1/s]$")
-        axf.set_ylabel("$\eta [Pa \cdot s]$")
+        
+        figure_opt(axf)
         axf.legend(['input data','result'])
-        axf.autoscale(enable=True, axis='both')
+
         ffig.tight_layout()
         #printing onto the canvas
         fcanvas = FigureCanvasTkAgg(ffig, master=fframe)
@@ -212,8 +247,8 @@ if __name__=='__main__':
         
         ftoolbar = NavigationToolbar2Tk(fcanvas, fframe)
         ftoolbar.update()
-      
         ftoolbar.grid(row=1,column=0,padx=10,pady=10)
+        
         fcanvas.get_tk_widget().grid(row=0,column=0)
         
         #Printing regression data results
@@ -268,7 +303,7 @@ if __name__=='__main__':
     dropdown.grid(row=2, column=1)
     #Ok button to confirm choice
     btn_ok=Button(frame, text="Ok")
-    btn_ok.bind("<Button-1>", initialGuess)
+    btn_ok.bind("<Button-1>", enter_guess)
     btn_ok.grid(row=2, column=2)
     
     #Input file is read and initial guesses are set by users
