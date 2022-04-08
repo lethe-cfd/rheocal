@@ -25,13 +25,15 @@ models=[
         "Cross"]
 
 def r2score(yexp,yreg):
-    mean2err=np.sum(np.power(yexp-yreg,2))/len(yexp)
-    
+    print(np.sum(abs((yexp-yreg)/yexp)))
+    meanerror=np.sum(abs((yexp-yreg)/yexp))/len(yexp)
+    print(meanerror)
+  
     yavg=np.sum(yexp)/len(yexp)
     avg=(yexp-yavg)
     reg=(yexp-yreg)
     R2=(np.sum(np.power(avg,2))-np.sum(np.power(reg,2)))/np.sum(np.power(avg,2))  
-    return R2,mean2err
+    return R2,meanerror
 
 
 def readData(inputFile):

@@ -11,7 +11,6 @@ Created on Mon Mar 21 17:37:18 2022
 
 #Import librairies
 from tkinter import *
-from tkinter import ttk, filedialog
 from PIL import ImageTk, Image
 from tkinter.filedialog import askopenfile
 from matplotlib.backends.backend_tkagg import (
@@ -120,15 +119,15 @@ if __name__=='__main__':
          - R2
         """
         #Calculating R2 score and mean error
-        R2,mean2err=r2score(reg.etaE,estimate(reg.param,select_mod.get(),reg.dgammaE))
+        R2,meanerror=r2score(reg.etaE,estimate(reg.param,select_mod.get(),reg.dgammaE))
         #Printing regression data results
-        lbl_n = Label(master=frame, text=" - Regression performed in "+'{:.0f}'.format(reg.n)+"/500 iterations.")
+        lbl_n = Label(master=frame, text=" - Regression performed in: "+'{:.0f}'.format(reg.n)+"/500 iterations.")
         lbl_n.grid(row=0, column=0,pady=10, sticky="w")
-        lbl_tol = Label(master=frame, text=" - Tolerance of "+'{:.3e}'.format(reg.tol))
+        lbl_tol = Label(master=frame, text=" - Tolerance of: "+'{:.3e}'.format(reg.tol))
         lbl_tol.grid(row=1, column=0, pady=10, sticky="w")
-        lbl_mean2err = Label(master=frame, text=" - Mean squared error "+'{:.6e}'.format(mean2err))
+        lbl_mean2err = Label(master=frame, text=" - Average error on input data: "+'{:.3%}'.format(meanerror))
         lbl_mean2err.grid(row=3, column=0, pady=10, sticky="w")   
-        lbl_R2 = Label(master=frame, text=" - Determination coefficient "+'{:.5f}'.format(R2))
+        lbl_R2 = Label(master=frame, text=" - Determination coefficient: "+'{:.5f}'.format(R2))
         lbl_R2.grid(row=4, column=0, pady=10, sticky="w") 
           
     def open_file():
