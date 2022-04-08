@@ -50,7 +50,7 @@ input_tab_frame.grid(row=0,column=0)
 result_tab_frame= LabelFrame(root, width=1200,heigh=800)
 result_tab_frame.grid(row=0,column=0)
 
-#%%
+#%% Class definition
 
 class NLR:
     """
@@ -72,6 +72,8 @@ class NLR:
         self.tol=tol
         self.theta=theta
         self.param_lbl=param_lbl
+        
+#%%Functions        
 
 if __name__=='__main__':
     #regression problem is initialized
@@ -128,8 +130,7 @@ if __name__=='__main__':
         lbl_mean2err.grid(row=3, column=0, pady=10, sticky="w")   
         lbl_R2 = Label(master=frame, text=" - Determination coefficient "+'{:.5f}'.format(R2))
         lbl_R2.grid(row=4, column=0, pady=10, sticky="w") 
-        
-    
+          
     def open_file():
        """
        Open and read files, then extract the data and plot it on the interface
@@ -237,12 +238,16 @@ if __name__=='__main__':
         canvas.get_tk_widget().grid(row=0,column=0)
 
     def Runregression():
+        """
+        Show regression result for parameters in input tab and performance in result tab
+          * canvas created in result tab on the left to plot
+        """
         #caling the regression function
         reg.param,reg.n,reg.theta= regression(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n,reg.theta)  
         #viscosity found with the calculated parameters (to be plotted)
         reg.eta = estimate(reg.param,select_mod.get(),reg.dgamma)
         
-        ###PRINTING RESULTS###    
+        #Printing parameters newfound values    
         for i in range(len(reg.param_lbl)):
             lbl_ans = Label(master=rframe, text=reg.param_lbl[i]+" = "+'{:.4f}'.format(reg.param[i]))
             lbl_ans.grid(row=1+i, column=0, sticky="w")
@@ -269,22 +274,18 @@ if __name__=='__main__':
         show_performance(result_data_frm)
                
     
-    #%% INPUT
-    ### 1. HELP FIGURE FRAME ###    
-    #help_canvas=Canvas(help_tab_frame,bg="white")
-    #help_canvas.grid(row=0,column=0)
-    
+    #%% 1. HELP TAB WIDGETS
+    #Resize help figure for input file layout  
     open_help_img= Image.open("input_help.png")
     resized_img=open_help_img.resize((400,500), Image.ANTIALIAS)
-    
     sized_help_img= ImageTk.PhotoImage(resized_img)
+    
+    #Display help image
     help_lbl=Label(help_tab_frame, image=sized_help_img)
     help_lbl.grid(row=0,column=0)
     
-    #help_img= PhotoImage(file="input_help.png")
-    #input_helpimg= help_canvas.create_image(0,0,anchor=NW, image=help_img)
-    
-    ### 2. INPUT DATA FRAME ###
+    #%% 2. INPUT TAB WIDGETS
+    #Every variable changed/input by user within this frame
     frame= LabelFrame(input_tab_frame, text="Select Parameters", padx=20,pady=20)
     frame.grid(row=0,column=0,padx=10,pady=10,sticky="n")
     
@@ -314,19 +315,18 @@ if __name__=='__main__':
     #Run button to run regression    
     btn_run=Button(frame, text="Run",bg="orange",command=Runregression)
     btn_run.grid(row=8, column=9,padx=10,sticky="e")
-    
-    ### INITIAL GRAPH FRAME ###
-    #graph frame#
+
+    #Initial graph frame
     gframe= LabelFrame(input_tab_frame, text="Figures", padx=10,pady=10)
     gframe.grid(row=0,column=1,rowspan=3,padx=10,pady=10)
 
-
-    #%% RESULTS
-
+    #Parameter final values and formula frame
     rframe= LabelFrame(input_tab_frame, text="Results", padx=40,pady=20)
     rframe.grid(row=1,column=0,padx=10,pady=10)
 
-    ### RESULT GRAPH FRAME ###
+    #%% 3. RESULT TAB WIDGETS
+
+    #Result graph frame
     fframe= LabelFrame(result_tab_frame, text="Non linear regression graph", padx=10,pady=10)
     fframe.grid(row=0,column=0,padx=10,pady=10)
       
