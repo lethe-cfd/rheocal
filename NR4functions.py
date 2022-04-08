@@ -111,7 +111,6 @@ def regression(param0,law,dgammaE,yexp,tol,n,theta):
         except:
             relaxation=True
         while relaxation: 
-            print(theta)
             theta=0.5*theta
             relaxation=la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE))
         x=x+theta*dxn

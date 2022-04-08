@@ -59,8 +59,9 @@ class NLR:
     - tol: tolerance on regression answer
     - dgammaE, etaE, guess: user input for experimental shear rate, viscosity and initial guesses on parameters
     - dgamma, eta, param: calculated values for viscosity for a sample shear rate vector, calculated parameters
+    - param_lbl: parameters label for user interface
     """
-    def __init__(self,n=0,tol=1e-05,theta=1.0,dgammaE=[],etaE=[],guess=[],dgamma=[],eta=[],param=[]):
+    def __init__(self,n=0,tol=1e-05,theta=1.0,dgammaE=[],etaE=[],guess=[],dgamma=[],eta=[],param=[],param_lbl=[]):
         self.dgammaE = dgammaE
         self.etaE=etaE
         self.guess=guess
@@ -70,6 +71,7 @@ class NLR:
         self.n=n
         self.tol=tol
         self.theta=theta
+        self.param_lbl=param_lbl
 
 if __name__=='__main__':
     #regression problem is initialized
@@ -107,6 +109,27 @@ if __name__=='__main__':
         eqcanvas.draw()
         eqcanvas.get_tk_widget().grid(row=0,column=0)
           
+    def show_performance(frame):
+        """
+        Display the regression's performance data
+         - tolerance
+         - number of iteration
+         - mean error
+         - R2
+        """
+        #Calculating R2 score and mean error
+        R2,mean2err=r2score(reg.etaE,estimate(reg.param,select_mod.get(),reg.dgammaE))
+        #Printing regression data results
+        lbl_n = Label(master=frame, text=" - Regression performed in "+'{:.0f}'.format(reg.n)+"/500 iterations.")
+        lbl_n.grid(row=0, column=0,pady=10, sticky="w")
+        lbl_tol = Label(master=frame, text=" - Tolerance of "+'{:.3e}'.format(reg.tol))
+        lbl_tol.grid(row=1, column=0, pady=10, sticky="w")
+        lbl_mean2err = Label(master=frame, text=" - Mean squared error "+'{:.6e}'.format(mean2err))
+        lbl_mean2err.grid(row=3, column=0, pady=10, sticky="w")   
+        lbl_R2 = Label(master=frame, text=" - Determination coefficient "+'{:.5f}'.format(R2))
+        lbl_R2.grid(row=4, column=0, pady=10, sticky="w") 
+        
+    
     def open_file():
        """
        Open and read files, then extract the data and plot it on the interface
@@ -157,15 +180,15 @@ if __name__=='__main__':
         label.grid(row=3, column=0,columnspan=3, pady=15)       
         #Define label of each model's parameter
         if select_mod.get()==options[0]:
-            param_lbl=["m","n"]
+            reg.param_lbl=["m","n"]
         if select_mod.get()==options[1]:
-            param_lbl=["eta _inf","eta _0","lambda","n"]
+            reg.param_lbl=["eta _inf","eta _0","lambda","n"]
         if select_mod.get()==options[2]:
-            param_lbl=["eta_inf","eta_0","alpha","m"]
+            reg.param_lbl=["eta_inf","eta_0","alpha","m"]
 
         #Print the parameter labels and show entry box to the right
-        for i in range(len(param_lbl)):
-            lbl_m = Label(master=frame, text=param_lbl[i]+" =")
+        for i in range(len(reg.param_lbl)):
+            lbl_m = Label(master=frame, text=reg.param_lbl[i]+" =")
             lbl_m.grid(row=4+i, column=0, sticky="e")
             #Entry boxes showed with suggestions for eta_0 and eta_inf
             guess_input=Entry(frame,width=15)
@@ -177,10 +200,13 @@ if __name__=='__main__':
                     guess_input.insert(0,str(0.99*max(reg.etaE)))
             #retrieve the input value of the parameter guess
             reg.guess.append(guess_input)
-            
-            
-    def initialGraph():
-        #clear param to allow for iterations on the guess values
+                      
+    def show_guess():
+        """
+        Show the user's guess on the parameters, guess against input plot
+          * canvas created in input tab on the right to plot
+        """
+        #clear param to allow reentering guesses multiple times
         if len(reg.param)!=[]:
             del_vec=np.arange(0,len(reg.param),1,dtype=int)
             reg.param=np.delete(reg.param,del_vec)
@@ -201,71 +227,47 @@ if __name__=='__main__':
         ax = fig2.add_subplot()
         #Plotting new figure with guess values AND input data
         line_guess = ax.plot(reg.dgammaE,reg.etaE,'gx',reg.dgamma,reg.eta,'b-')
-        
         figure_opt(ax)     
         ax.legend(['input data','guess'])
-
-        
         fig2.tight_layout()
+        
         #printing onto the canvas the modified plot
         canvas = FigureCanvasTkAgg(fig2, master=gframe)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0,column=0)
 
-    
     def Runregression():
         #caling the regression function
         reg.param,reg.n,reg.theta= regression(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n,reg.theta)  
         #viscosity found with the calculated parameters (to be plotted)
         reg.eta = estimate(reg.param,select_mod.get(),reg.dgamma)
         
-        ###PRINTING RESULTS###
-        if select_mod.get()==options[0]:
-            param_lbl=["m","n"]
-        if select_mod.get()==options[1]:
-            param_lbl=["eta_inf","eta_0",'lambda',"n"]
-        if select_mod.get()==options[2]:
-            param_lbl=["eta_inf","eta_0",'alpha',"m"]
-    
-        for x in range(len(param_lbl)):
-            lbl_ans = Label(master=rframe, text=param_lbl[x]+" = "+'{:.4f}'.format(reg.param[x]))
-            lbl_ans.grid(row=1+x, column=0, sticky="w")
+        ###PRINTING RESULTS###    
+        for i in range(len(reg.param_lbl)):
+            lbl_ans = Label(master=rframe, text=reg.param_lbl[i]+" = "+'{:.4f}'.format(reg.param[i]))
+            lbl_ans.grid(row=1+i, column=0, sticky="w")
 
         #Figure initialization
-        ffig = plt.Figure(figsize=(6, 5), dpi=100)
-        axf = ffig.add_subplot()
+        finalfig = plt.Figure(figsize=(6, 5), dpi=100)
+        axf = finalfig.add_subplot()
         #Plotting new figure with guess values AND input data
         line_final = axf.plot(reg.dgammaE,reg.etaE,'gx',reg.dgamma,reg.eta,'k-')
-        
         figure_opt(axf)
         axf.legend(['input data','result'])
-
-        ffig.tight_layout()
-        #printing onto the canvas
-        fcanvas = FigureCanvasTkAgg(ffig, master=fframe)
+        finalfig.tight_layout()
+        
+        #Printing onto the canvas
+        fcanvas = FigureCanvasTkAgg(finalfig, master=fframe)
         fcanvas.draw()
         
+        #Navigation Toolbar
         ftoolbar = NavigationToolbar2Tk(fcanvas, fframe)
         ftoolbar.update()
         ftoolbar.grid(row=1,column=0,padx=10,pady=10)
         
         fcanvas.get_tk_widget().grid(row=0,column=0)
-        
-        #Printing regression data results
-        R2,mean2err=r2score(reg.etaE,estimate(reg.param,select_mod.get(),reg.dgammaE))
-
-        lbl_n = Label(master=result_data_frm, text=" - Regression performed in "+'{:.0f}'.format(reg.n)+"/500 iterations.")
-        lbl_n.grid(row=0, column=0,pady=10, sticky="w")
-        lbl_tol = Label(master=result_data_frm, text=" - Tolerance of "+'{:.3e}'.format(reg.tol))
-        lbl_tol.grid(row=1, column=0, pady=10, sticky="w")
-        # lbl_theta = Label(master=result_data_frm, text=" - Relaxation factor "+'{:.3f}'.format(reg.theta))
-        # lbl_theta.grid(row=2, column=0, pady=10, sticky="w")
-        lbl_mean2err = Label(master=result_data_frm, text=" - Mean squared error "+'{:.6e}'.format(mean2err))
-        lbl_mean2err.grid(row=3, column=0, pady=10, sticky="w")   
-        lbl_R2 = Label(master=result_data_frm, text=" - Determination coefficient "+'{:.5f}'.format(R2))
-        lbl_R2.grid(row=4, column=0, pady=10, sticky="w")        
-
-
+        show_performance(result_data_frm)
+               
     
     #%% INPUT
     ### 1. HELP FIGURE FRAME ###    
@@ -307,7 +309,7 @@ if __name__=='__main__':
     btn_ok.grid(row=2, column=2)
     
     #Input file is read and initial guesses are set by users
-    btn_showguess=Button(frame, text="Show me my guess",command=initialGraph).grid(row=8, column=2)   
+    btn_showguess=Button(frame, text="Show me my guess",command=show_guess).grid(row=8, column=2)   
     
     #Run button to run regression    
     btn_run=Button(frame, text="Run",bg="orange",command=Runregression)
