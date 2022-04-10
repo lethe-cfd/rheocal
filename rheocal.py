@@ -11,6 +11,7 @@ Created on Mon Mar 21 17:37:18 2022
 
 #Import librairies
 from tkinter import *
+from tkinter import ttk, filedialog
 from PIL import ImageTk, Image
 from tkinter.filedialog import askopenfile
 from matplotlib.backends.backend_tkagg import (
@@ -77,14 +78,6 @@ class NLR:
 if __name__=='__main__':
     #regression problem is initialized
     reg=NLR()
-    
-    def figure_opt(subplot):
-          #Adjust graph axes display
-          subplot.set_yscale("log")
-          subplot.set_xscale("log")
-          subplot.set_xlabel("$\dot \gamma [1/s]$")
-          subplot.set_ylabel("$\eta [Pa \cdot s]$")
-          subplot.autoscale(enable=True, axis='both')
           
     def formula_img(law):
         """
@@ -135,7 +128,7 @@ if __name__=='__main__':
        Open and read files, then extract the data and plot it on the interface
          * canvas created in input tab on the right to plot
        """
-       file = filedialog.askopenfile(mode='r', filetypes=[('Text files', '*.txt'),('DAT files','*.dat'),('CSV files','*.csv')])
+       file = filedialog.askopenfile(mode='r', filetypes=[('Text files', '*.txt'),('CSV files','*.csv')])
        path=[]
        if file:
           #Extract and print the file name 
@@ -145,8 +138,9 @@ if __name__=='__main__':
           
           #Extract data from file
           f = open(file.name, 'r')
-          [reg.etaE,reg.dgammaE]=readData(file.name)
-               
+          [reg.dgammaE,reg.etaE]=readData(file.name)
+          f.close()
+          
           ### Draw input data ###
           #Initialize canvas
           fig = plt.Figure(figsize=(5, 4), dpi=100)
@@ -176,7 +170,7 @@ if __name__=='__main__':
         formula_img(select_mod.get())
         
         #Asking for initial guesses
-        label = Label(frame, text="Please define initial guesses on parameters:", font=('Arial 12'))
+        label = Label(frame, text="Please define initial guesses on parameters (decimal separator is dot):", font=('Arial 12'))
         label.grid(row=3, column=0,columnspan=3, pady=15)       
         #Define label of each model's parameter
         if select_mod.get()==options[0]:
@@ -211,12 +205,13 @@ if __name__=='__main__':
             del_vec=np.arange(0,len(reg.param),1,dtype=int)
             reg.param=np.delete(reg.param,del_vec)
                   
-        #retrieve the numerical values of the guessed parameters to evaluate the function
+        #retrieve the numerical values of the guess or infor user of error
         for i in range(len(reg.guess)):
             try:
                 reg.param=np.append(reg.param,float(reg.guess[i].get()))
             except ValueError:
-                print("Make sure you entered numbers for each parameter")
+                entry_error_lbl =Label(master=frame, text="Make sure you entered numbers for each parameter. Please run rheocal again.",fg='red')
+                entry_error_lbl.grid(row=9, column=0, columnspan=3)
         
         #Viscosity data corresponding to user defined parameters
         reg.dgamma=np.logspace(np.log10(min(reg.dgammaE)),np.log10(max(reg.dgammaE)),100)
@@ -242,7 +237,7 @@ if __name__=='__main__':
           * canvas created in result tab on the left to plot
         """
         #caling the regression function
-        reg.param,reg.n,reg.theta= regression(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n,reg.theta)  
+        reg.param,reg.n,reg.theta= newton_solve(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n,reg.theta)  
         #viscosity found with the calculated parameters (to be plotted)
         reg.eta = estimate(reg.param,select_mod.get(),reg.dgamma)
         
@@ -292,7 +287,7 @@ if __name__=='__main__':
     lbl_file = Label(frame, text="Select a data input file:", font=('Arial 12'))
     lbl_file.grid(row=0, column=0, pady=10)
     
-    # Button to search for a file
+    # Button "Browse" to search for a file
     Button(frame, text="Browse file", command=open_file).grid(row=0, column=2,pady=10)
     
     #Dropdown menu to select model
@@ -303,7 +298,8 @@ if __name__=='__main__':
     dropdown = OptionMenu(frame, select_mod,*options)
     dropdown.config(width=20)
     dropdown.grid(row=2, column=1)
-    #Ok button to confirm choice
+    
+    #"Ok" button to confirm choice
     btn_ok=Button(frame, text="Ok")
     btn_ok.bind("<Button-1>", enter_guess)
     btn_ok.grid(row=2, column=2)
@@ -328,7 +324,8 @@ if __name__=='__main__':
     #Result graph frame
     fframe= LabelFrame(result_tab_frame, text="Non linear regression graph", padx=10,pady=10)
     fframe.grid(row=0,column=0,padx=10,pady=10)
-      
+    
+    #Result performance data frame  
     result_data_frm=LabelFrame(result_tab_frame, text="Regression performance", padx=10,pady=10)
     result_data_frm.grid(row=0,column=1,padx=10,pady=10, sticky="n")
     
