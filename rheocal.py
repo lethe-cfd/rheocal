@@ -34,6 +34,7 @@ options=[
 root = Tk()
 root.title('Rheocal: Rheology model regression!') 
 #window first automaticaly fits whole screen but can be resized
+root.lift()
 root.state('zoomed')   
 root.resizable(True, True)
 #Create notebook to make tabs
@@ -152,12 +153,12 @@ if __name__=='__main__':
           line_input = ax.plot(reg.dgammaE,reg.etaE,'gx')
           figure_opt(ax)
           fig.tight_layout()
-         
+          
           #Navigation Toolbar
-          toolbar = NavigationToolbar2Tk(canvas, gframe)
+          toolbar = NavigationToolbar2Tk(canvas,gframe,pack_toolbar=False)
           toolbar.update()
           toolbar.grid(row=1,column=0,padx=10,pady=10)
-          
+            
           #Printing embedded canvas onto the interface
           canvas.get_tk_widget().grid(row=0,column=0)
           
