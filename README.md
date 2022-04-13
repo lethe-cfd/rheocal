@@ -33,28 +33,50 @@ If the input file name and the input data graph show up correctly, you may then 
 
 The equation of the selected model will show up in a frame below. 
 
-### Entering guess values
-Guess values can be entered in the white boxes. For Cross and Carreau models, the default value for eta_0 is 0.99* max(eta) and eta_inf is 1.1min(eta). These values can be changed. For the regression to function properly, all the entry box must contain a numerical value, with dot as decimal separator if needed.
+### 4. Entering guess values
+Guess values can be entered in the white boxes. For Cross and Carreau models, the default value for &#951;_0 is 0.99* max(&#951;) and &#951;_inf is 1.1min(&#951;). These values can be changed. For the regression to function properly, all the entry box must contain a numerical value, with dot as decimal separator if needed.
 
 The "Show me my guess" button will plot on the graph what the model would look like with the guess. The input data from the selected file will also show and the user may correct the guess and click to visualize again until it is close enough to the input file.
 * If any non-numerical value is entered, an error message will be printed and the user will have to restart the program.
 
-### Running the regression and reading results
-Once the initial values are guessed by user, clicking on the run button will start the regression. Shortly, the values found by the software should appear in the input tab, on the bottom left frame (Results). For more details on the results, the "Results" tab show the
+### 5. Running the regression and reading results
+Once the initial values are guessed by user, clicking on the run button will start the regression. Shortly, the values found by the software should appear in the input tab, on the bottom left frame (Results). For more details on the results, the "Results" tab to show the performance report. The regression will also be plotted on that tab against the input values. The number of iterations needed, the tolerance obtained, the R square coefficient and the average error in percentage are displayed on the right. The toolbar below the graphs allows to save, reconfigure and zoom in on the subplot. 
 
 
-
-It might not show on top but taskbar
+## Example
 
 ## Roadmap
 
+- types of input files
 - incertitudes sur les valeurs
 - fix a, or multiple parameters
-- error warning explained to user and not stop system (more try)
+- Warning and error messages:
+
+It would be usefull to show the sources of problems on the user interfaces. It would be very helpful to identify whether the problem lies in the software and the use of rheocal, or in the input data. 
+Relevant warnings include:
+
 - flexible input
-- autofit function
-- guess function
-- Carreau-Yasuda (5 parameters)
+- Autofit:
+
+When the user doesn't know which rheology model would best describe a set of data, the autofit function would try each model. Then, based on the performance reporte, the user report would be able to see which model has the best performance for different statistical parameters. Ideally, the user could ask to be showed first the best model based on a parameter of his choosing. The parameter, such as the R squared value or the mean error, would then be one of the input of the regression.
+
+It would be very helpful for this to have a guess function, otherwise the user would also have to select initial values for all parameters of all the models available.
+
+Another solution would be to offer the user to compare two models (or more) , instead of trying them all
+
+- Guess function for initial values:
+
+A guess function, that could run either optionally or automatically to display default values, would help the user find a realistic range on the initial parameter values. This is might be the most difficult function to implement, because the regression might or might not converge, depending on these values. Hence why it might be preferable to let the user modify the values guessed by this function.
+
+The parameters can vary widely depending on the fluid. But here are some observations to help:
+Power law model: on a logarithmic graph, n corresponds to the slope of the line, while m corresponds to the y intercept on the regression line.
+
+- Carreau-Yasuda model:
+
+For some fluids, the Carreau-Yasuda model, which has one more parameter than the Carreau model, would best describe the result. 
+The regression with 5 parameters has not been attempted yet with a minimum relative squared error problem and variable relaxation. Therefore a first try would be to\\\\||||||
+[image Car-Yas] 
+
 - p values
 - change selected model
 - rerun file
