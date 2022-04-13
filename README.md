@@ -34,10 +34,13 @@ If the input file name and the input data graph show up correctly, you may then 
 The equation of the selected model will show up in a frame below. 
 
 ### Entering guess values
-Guess values can be entered in the white boxes. For Croos and Carreau models, the default values for 
+Guess values can be entered in the white boxes. For Cross and Carreau models, the default value for eta_0 is 0.99* max(eta) and eta_inf is 1.1min(eta). These values can be changed. For the regression to function properly, all the entry box must contain a numerical value, with dot as decimal separator if needed.
 
+The "Show me my guess" button will plot on the graph what the model would look like with the guess. The input data from the selected file will also show and the user may correct the guess and click to visualize again until it is close enough to the input file.
+* If any non-numerical value is entered, an error message will be printed and the user will have to restart the program.
 
-
+### Running the regression and reading results
+Once the initial values are guessed by user, clicking on the run button will start the regression. Shortly, the values found by the software should appear in the input tab, on the bottom left frame (Results). For more details on the results, the "Results" tab show the
 
 
 
@@ -47,7 +50,7 @@ It might not show on top but taskbar
 
 - incertitudes sur les valeurs
 - fix a, or multiple parameters
-- error warning explained to user
+- error warning explained to user and not stop system (more try)
 - flexible input
 - autofit function
 - guess function
