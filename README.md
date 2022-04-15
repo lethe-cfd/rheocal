@@ -1,11 +1,6 @@
 # rheocal
 The rheocal project aims at developing a simple tool to automatically calibrate rheological models for generalized newtonian fluids based on experimental viscosity measurements.
 
-## Usage
-
-```python
-
-```
 ## User guide
 
 When running the rheocal.py program, the user interface will pop up. This window can be resized or minimized. 
