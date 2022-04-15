@@ -99,4 +99,8 @@ All the graphs have the same format, but are called with their own canvas and on
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## Authors
+##### Main developper 
 Bérénice Dubois
+
+##### Contributors
+Bruno Blais
