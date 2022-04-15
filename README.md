@@ -2,8 +2,8 @@
 The rheocal project aims at developing a simple tool to automatically calibrate rheological models for generalized newtonian fluids based on experimental viscosity measurements.
 
 ## User guide
-
-When running the rheocal.py program, the user interface will pop up. This window can be resized or minimized. 
+Here are the steps to follow to obtain the nonlinear regression for a rheology model.
+When running the rheocal.py program, the user interface will pop up. This window can be resized or minimized.
 
 ### 1. Input file format
 The "Help" tab is by default the first tab opened. It shows a picture of how data should be entered in the input file in order for the program to execute properly. 
@@ -49,7 +49,7 @@ A first improvement would be the nonlinear solver. On the current version, the i
 The module ```scipy.optimze``` was also briefly tested. The functions ```scipy.optimze.minimize``` (minimize the least square sum), ```scipy.optimze.least_squares``` and ```scipy.optimze.fsolve``` (solve the nonlinear system) were tested, but the resulting solver was not enough performant. 
 
 #### 2. Detailed performance report
-The performance report is very brief in the current version.
+The performance report is very brief in the current version. However, the R squared coefficient is a poor method of evaluating the regression quality. Hence the need for more statistical evaluations of the regression. For example, the report could include the p values.
 
 #### 3. Flexible inputs
 The current interface does not allow the user to make many changes in the inputs. Here are some downsides that would be good to fix:
@@ -68,9 +68,8 @@ Relevant warnings include:
 3) Initial guesses quality: it might be helpful to inform the user of the quality of the guesses. It could be based for example on the mean relative error and show a warning if it is too low.
 
 
-
 #### 5. Impose one or multiple parameters
-
+If the user has a better idea of the expected answer, it would be nice to be able to impose a value on one or multiple parameters. But if there is one less variable parameter, the nonlinear equation systems goes from n equations to n-1 equation, meaning the whole problem is changed. It might not be hard to implement, since it would simplify the mathematical problem, but it would probably be time consuming and require good code architecture. 
 
 
 #### 6. Guess function for initial values:
@@ -96,9 +95,8 @@ The regression with 5 parameters has not been attempted yet with a minimum relat
 #### 9. One function to print all graphs
 All the graphs have the same format, but are called with their own canvas and on different frames. It is probably possible to create a function that takes the plotted data, frame and canvas and shows the three different graphs. It was not implemented in this version because it required a lot of time and debugging with the GUI modules.
 
-- incertitudes sur les valeurs
-
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## Authors
+Bérénice Dubois
