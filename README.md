@@ -44,14 +44,17 @@ Once the initial values are guessed by user and the "Show me my guess" button ha
 Here are some components of the software to improve in the next steps. They are listed from most relevant to least important. Components 5 or more are challenges or nice to have.
 
 #### 1. Stronger solver
+A first improvement would be the nonlinear solver. On the current version, the initial guesses must be too precise to correctly perform the regression, which might in some case defeat the purpose of the software. The current method for solving the relative least square sum is the Newton-Raphson method with a numerical jacobian matrix and variable relaxation. 
 
+The module ```scipy.optimze``` was also briefly tested. The functions ```scipy.optimze.minimize``` (minimize the least square sum), ```scipy.optimze.least_squares``` and ```scipy.optimze.fsolve``` (solve the nonlinear system) were tested, but the resulting solver was not enough performant. 
 
 #### 2. Detailed performance report
+The performance report is very brief in the current version.
 
 #### 3. Flexible inputs
 The current interface does not allow the user to make many changes in the inputs. Here are some downsides that would be good to fix:
 1) Change the selected model: with the current version, it is impossible to change model once it has been selected with the "Ok" button. This might not be hard to fix, the variables can be cleaned easily. However ont the previous attempts, the interface could not be completely cleared of the widgets.
-2) Rerun the program: It would be more practical not to have to close the file and rerun the program everytime the user wants to evaluate another set of data
+2) Rerun the program: It would be more practical not to have to close the file and rerun the program everytime the user wants to evaluate another set of data.
 3) "Show me my guess" to save guesses: another graphic user interface issue - the user's guesses are save only when this button is clicked to pass the variables correctly
 4) Non-numeric entries: Non-numeric entries in the input file and the guess causes the end of the program. It would be usefull to add a function to allow to re-enter inputs.
 5) Input files: it would be relevant to allow a header to the input files, and perhaps to read the data based on these headers.
@@ -61,7 +64,7 @@ The current interface does not allow the user to make many changes in the inputs
 It would be usefull to show the sources of problems on the user interfaces. It would be very helpful to identify whether the problem lies in the software and the use of rheocal, or in the input data. 
 Relevant warnings include:
 1) Irrealistic inputs: too many outliers, odd range of values,
-2) 
+2) Maimum iteration used: If the regression ended because the maximum number of iteration was used, a good thing would be to send the user some information as to what happened. This information might include the residual matrix, the last few steps on the parameters or the relaxation factors to indicate if the solution has converged.
 3) Initial guesses quality: it might be helpful to inform the user of the quality of the guesses. It could be based for example on the mean relative error and show a warning if it is too low.
 
 
@@ -71,11 +74,12 @@ Relevant warnings include:
 
 
 #### 6. Guess function for initial values:
-
 A guess function, that could run either optionally or automatically to display default values, would help the user find a realistic range on the initial parameter values. This is might be the most difficult function to implement, because the regression might or might not converge, depending on these values. Hence why it might be preferable to let the user modify the values guessed by this function.
 
 The parameters can vary widely depending on the fluid. But here are some observations to help:
-Power law model: on a logarithmic graph, n corresponds to the slope of the line, while m corresponds to the y intercept on the regression line.
+- Power law model: on a logarithmic graph, n corresponds to the slope of the line, while m corresponds to the y intercept on the regression line.
+- Carreau model: at the first inflection of the curve (on the left), the shear rate value is about equal to 1/&#955; 
+the n parameter is also directly linked to the slope of the line
 
 
 #### 7. Autofit function
@@ -85,12 +89,13 @@ It would be very helpful for this to have a guess function, otherwise the user w
 
 
 #### 8. Carreau-Yasuda model:
-
 For some fluids, the [Carreau-Yasuda model](https://lethe-cfd.github.io/lethe/theory/fluid_dynamics/rheology.html), which has one more parameter than the Carreau model, would best describe the result. 
 The regression with 5 parameters has not been attempted yet with a minimum relative squared error problem and variable relaxation. 
 
 
-- one function to print all graphs
+#### 9. One function to print all graphs
+All the graphs have the same format, but are called with their own canvas and on different frames. It is probably possible to create a function that takes the plotted data, frame and canvas and shows the three different graphs. It was not implemented in this version because it required a lot of time and debugging with the GUI modules.
+
 - incertitudes sur les valeurs
 
 ## Contributing
