@@ -95,6 +95,8 @@ The regression with 5 parameters has not been attempted yet with a minimum relat
 #### 9. One function to print all graphs
 All the graphs have the same format, but are called with their own canvas and on different frames. It is probably possible to create a function that takes the plotted data, frame and canvas and shows the three different graphs. It was not implemented in this version because it required a lot of time and debugging with the GUI modules.
 
+#### 10. Object oriented functions
+The only object oriented part is the NLR class to store variables. However, the functions in the NR4_functions.py file could also be defined in the class. It might also be easier to use object oriented programming to have more control over the graphical user interface. 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
