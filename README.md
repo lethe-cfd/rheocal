@@ -63,7 +63,7 @@ The current interface does not allow the user to make many changes in the inputs
 #### 4. Warning and error messages
 It would be usefull to show the sources of problems on the user interfaces. It would be very helpful to identify whether the problem lies in the software and the use of rheocal, or in the input data. 
 Relevant warnings include:
-1) Irrealistic inputs: too many outliers, odd range of values
+1) Irrealistic inputs: too many outliers, not enough values to perform regression, odd range of values
 2) Maximum iteration used: If the regression ended because the maximum number of iteration was used, a good thing would be to send the user some information as to what happened. This information might include the residual matrix, the last few steps on the parameters or the relaxation factors to indicate if the solution has converged.
 3) Initial guesses quality: it might be helpful to inform the user of the quality of the guesses. It could be based for example on the mean relative error and show a warning if it is too low.
 
