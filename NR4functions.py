@@ -9,23 +9,13 @@ Created on Tue Mar  8 13:14:50 2022
 import scipy.linalg as la
 import numpy as np
 import matplotlib.pyplot as plt
-import math as mt
-import sys
-import os
-from tkinter import *
-from tkinter import ttk, filedialog
-from tkinter.filedialog import askopenfile
-from PIL import ImageTk, Image
 
 
-#value of the a parameter in the Carreau model
-a=2.0
 #List of rheology models, must be identical to the one in "rheocal.py"
 models=[
         "Power Law",
         "Carreau",
         "Cross"]
-
 
 def readData(inputFile):
     """
@@ -99,7 +89,7 @@ def estimate(param,law,dgamma):
     #Carreau model (Carreau-Yasuda with a=2)
     if law==models[1]:
         etainf,etazero,lambd,n=param
-        eta=(etazero-etainf)*(1+(lambd*dgamma)**a)**((n-1)/a)+etainf
+        eta=(etazero-etainf)*(1+(lambd*dgamma)**2)**((n-1)/2)+etainf
     #Cross model
     if law==models[2]:
         etainf,eta0,alpha,m=param
@@ -127,23 +117,24 @@ def R(etaE,param,law,dgammaE):
     #Power Law
     if law==models[0]:
         m,n=param
-        R[0]=np.sum((etaE-eta)/(etaE**2)*dgammaE**(n-1))
-        R[1]=np.sum((etaE-eta)/(etaE**2)*m*dgammaE**(n-1)*np.log(dgammaE))
+        R[0]=np.sum((eta-etaE)/(etaE**2)*dgammaE**(n-1))
+        R[1]=np.sum((eta-etaE)/(etaE**2)*m*dgammaE**(n-1)*np.log(dgammaE))
     #Carreau Model (Carreau-Yasuda with a=2)
     if law==models[1]:
         etainf,eta0,lamb,n=param
-        R[0]=np.sum((etaE-eta)/(etaE**2)*(1-(1+(dgammaE*lamb)**a)**((n-1)/a)))
-        R[1]=np.sum((etaE-eta)/(etaE**2)*(1+(dgammaE*lamb)**a)**((n-1)/a))
-        R[2]=np.sum((etaE-eta)/(etaE**2)*(dgammaE**a*lamb**(a-1)*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**a)**((n-3)/a)))
-        R[3]=np.sum((etaE-eta)/(etaE**2)*(eta0-etainf)/a*(np.exp((n-1)/a*np.log((dgammaE*lamb)**a+1))*np.log((dgammaE*lamb)**a+1)))
+        R[0]=np.sum((eta-etaE)/(etaE**2)*(1-(1+(dgammaE*lamb)**2)**((n-1)/2)))
+        R[1]=np.sum((eta-etaE)/(etaE**2)*(1+(dgammaE*lamb)**2)**((n-1)/2))
+        R[2]=np.sum((eta-etaE)/(etaE**2)*dgammaE**2*lamb*(eta0-etainf)*(n-1)*(1+(dgammaE*lamb)**2)**((n-3)/2))
+        R[3]=np.sum((eta-etaE)/(etaE**2)*(eta0-etainf)/2*(1+(dgammaE*lamb)**2)**((n-1)/2)*np.log((dgammaE*lamb)**2+1))
     #Cross
     if law==models[2]:  
         etainf,eta0,alpha,m=param
-        R[0]=np.sum((etaE-eta)/(etaE**2)*(1-(1/(1+(alpha*dgammaE)**m))))
-        R[1]=np.sum((etaE-eta)/(etaE**2)*(1/(1+(alpha*dgammaE)**m)))
-        R[2]=np.sum((etaE-eta)/(etaE**2)*((etainf-eta0)*m*dgammaE**m*alpha**(m-1))/(1+(alpha*dgammaE)**m)**2)
-        R[3]=np.sum((etaE-eta)/(etaE**2)*((etainf-eta0)*np.log(alpha*dgammaE)*(alpha*dgammaE)**m)/(1+(alpha*dgammaE)**m)**2) 
+        R[0]=np.sum((eta-etaE)/(etaE**2)*(1-(1/(1+(alpha*dgammaE)**m))))
+        R[1]=np.sum((eta-etaE)/(etaE**2)*(1/(1+(alpha*dgammaE)**m)))
+        R[2]=np.sum((eta-etaE)/(etaE**2)*((etainf-eta0)*m*dgammaE**m*alpha**(m-1))/(1+(alpha*dgammaE)**m)**2)
+        R[3]=np.sum((eta-etaE)/(etaE**2)*((etainf-eta0)*np.log(alpha*dgammaE)*(alpha*dgammaE)**m)/(1+(alpha*dgammaE)**m)**2) 
     return R
+
 
 def newton_solve(param0,law,dgammaE,yexp,tol,n,theta):
     """
@@ -165,7 +156,9 @@ def newton_solve(param0,law,dgammaE,yexp,tol,n,theta):
     x=param0 #initialize parameter value
     #initialize matrices
     dxn=np.ones(len(x),dtype=float)
-    J=np.zeros((len(x),len(x)),dtype=float)
+    jac=np.zeros((len(x),len(x)),dtype=float)
+    disturb=0.0001
+    res=np.transpose(R(yexp,x,law,dgammaE))
     while la.norm(dxn)>tol and n<N:
         #Initialize relaxation parameters
         relaxation=False
@@ -174,23 +167,30 @@ def newton_solve(param0,law,dgammaE,yexp,tol,n,theta):
         res=np.transpose(R(yexp,x,law,dgammaE))
         #Numerical Jacobian matrix calcul
         for i in range(len(x)):
-            xp=np.zeros(len(x))
-            xp[i]=0.0001*x[i]
-            xp=x+xp
-            rp=R(yexp,xp,law,dgammaE)
+            xd=np.zeros(len(x))
+            xd[i]=disturb*x[i]
+            xd=x+xd
+            rd=R(yexp,xd,law,dgammaE)
             r=R(yexp,x,law,dgammaE)
-            J[:,i]=(rp-r)/(tol*x[i])
+            jac[:,i]=(rd-r)/(disturb*x[i])
+
         #Solve system to find step to add on the parameter values
-        dxn=-np.dot(la.inv(J),res)
-        #relaxation if the step dxn takes us out of convergence zone
+        dxn=la.solve(jac,-res)      
         try:
+            # print("R(x+dxn)", R(yexp,x+theta*dxn,law,dgammaE))
+            # print("R(x)", R(yexp,x,law,dgammaE))  
             relaxation=la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE))
         except:
             relaxation=True
         while relaxation: 
             theta=0.5*theta
             relaxation=la.norm(R(yexp,x+theta*dxn,law,dgammaE))>la.norm(R(yexp,x,law,dgammaE))
-        #new value on parameters
+        # print("theta",theta)
+        # print("R(x+dxn)", R(yexp,x+theta*dxn,law,dgammaE))
+        # print("R(x)", R(yexp,x,law,dgammaE))
+       #new value on parameters
         x=x+theta*dxn
         n=n+1
     return x,n,theta
+
+

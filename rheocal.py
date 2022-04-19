@@ -126,8 +126,7 @@ if __name__=='__main__':
           
     def open_file():
        """
-       Open and read files, then extract the data and plot it on the interface
-         * canvas created in input tab on the right to plot
+       Open and read files, then extract the data 
        """
        file = filedialog.askopenfile(mode='r', filetypes=[('Text files', '*.txt'),('CSV files','*.csv')])
        path=[]
@@ -141,26 +140,33 @@ if __name__=='__main__':
           f = open(file.name, 'r')
           [reg.dgammaE,reg.etaE]=readData(file.name)
           f.close()
-          
-          ### Draw input data ###
-          #Initialize canvas
-          fig = plt.Figure(figsize=(5, 4), dpi=100)
-          canvas = FigureCanvasTkAgg(fig, master=gframe)
-          canvas.draw()
+          show_input()
+         
+    def show_input():
+        """
+        Plot input data on the interface
+         * canvas created in input tab on the right to plot
 
-          #Plotting input values
-          ax = fig.add_subplot()
-          line_input = ax.plot(reg.dgammaE,reg.etaE,'gx')
-          figure_opt(ax)
-          fig.tight_layout()
+        """
+        ### Draw input data ###
+        #Initialize canvas
+        fig = plt.Figure(figsize=(5, 4), dpi=100)
+        canvas = FigureCanvasTkAgg(fig, master=gframe)
+        canvas.draw()
+
+        #Plotting input values
+        ax = fig.add_subplot()
+        line_input = ax.plot(reg.dgammaE,reg.etaE,'gx')
+        figure_opt(ax)
+        fig.tight_layout()
+        
+        #Navigation Toolbar
+        toolbar = NavigationToolbar2Tk(canvas,gframe,pack_toolbar=False)
+        toolbar.update()
+        toolbar.grid(row=1,column=0,padx=10,pady=10)
           
-          #Navigation Toolbar
-          toolbar = NavigationToolbar2Tk(canvas,gframe,pack_toolbar=False)
-          toolbar.update()
-          toolbar.grid(row=1,column=0,padx=10,pady=10)
-            
-          #Printing embedded canvas onto the interface
-          canvas.get_tk_widget().grid(row=0,column=0)
+        #Printing embedded canvas onto the interface
+        canvas.get_tk_widget().grid(row=0,column=0)
           
     def enter_guess(event):
         """
@@ -230,12 +236,18 @@ if __name__=='__main__':
         #printing onto the canvas the modified plot
         canvas = FigureCanvasTkAgg(fig2, master=gframe)
         canvas.draw()
+        
+        #Navigation Toolbar
+        toolbar = NavigationToolbar2Tk(canvas,gframe,pack_toolbar=False)
+        toolbar.update()
+        toolbar.grid(row=1,column=0,padx=10,pady=10)
+        
+        #Printing embedded canvas onto the interface        
         canvas.get_tk_widget().grid(row=0,column=0)
 
-    def Runregression():
+    def run_regression():
         """
-        Show regression result for parameters in input tab and performance in result tab
-          * canvas created in result tab on the left to plot
+        Show regression result for parameters in input tab 
         """
         #caling the regression function
         reg.param,reg.n,reg.theta= newton_solve(reg.param,select_mod.get(),reg.dgammaE,reg.etaE,reg.tol,reg.n,reg.theta)  
@@ -246,7 +258,14 @@ if __name__=='__main__':
         for i in range(len(reg.param_lbl)):
             lbl_ans = Label(master=rframe, text=reg.param_lbl[i]+" = "+'{:.4f}'.format(reg.param[i]))
             lbl_ans.grid(row=1+i, column=0, sticky="w")
-
+            
+        show_solution()
+        
+    def show_solution():
+        """
+        Show regression graph result and performance in result tab
+          * canvas created in result tab on the left to plot
+        """
         #Figure initialization
         finalfig = plt.Figure(figsize=(6, 5), dpi=100)
         axf = finalfig.add_subplot()
@@ -309,7 +328,7 @@ if __name__=='__main__':
     btn_showguess=Button(frame, text="Show me my guess",command=show_guess).grid(row=8, column=2)   
     
     #Run button to run regression    
-    btn_run=Button(frame, text="Run",bg="orange",command=Runregression)
+    btn_run=Button(frame, text="Run",bg="orange",command=run_regression)
     btn_run.grid(row=8, column=9,padx=10,sticky="e")
 
     #Initial graph frame
